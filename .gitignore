@@ -1,0 +1,35 @@
+
+# OS X
+.DS_Store
+
+build
+out/
+
+# Intellij
+.idea/libraries/*
+.idea/*
+**/.idea/*.xml
+*.iml
+*.iws
+
+# Python
+*.pyc
+*.egg-info
+
+# Misc
+*.log
+.log
+.txt
+**/*.txt
+.cache
+
+/.gradle/
+
+
+*/out/
+
+Jenkinsfile
+/classes/
+
+vcs.xml
+*.tar.gz

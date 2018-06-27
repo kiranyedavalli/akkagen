@@ -1,15 +1,15 @@
-package common;
+package common.models;
 
 import java.util.Map;
 
-public class TxRestRequest extends AbstractRequest {
+public class TxRestNBRequest extends AbstractNBRequest {
 
     private String url;
     private String body;
     private Map<String, String> headers;
     private Map<String, String> queryParams;
 
-    public TxRestRequest() {
+    public TxRestNBRequest() {
     }
 
     public String getUrl() {
@@ -28,22 +28,22 @@ public class TxRestRequest extends AbstractRequest {
         return queryParams;
     }
 
-    public TxRestRequest setUrl(String url) {
+    public TxRestNBRequest setUrl(String url) {
         this.url = url;
         return this;
     }
 
-    public TxRestRequest setBody(String body) {
+    public TxRestNBRequest setBody(String body) {
         this.body = body;
         return this;
     }
 
-    public TxRestRequest setHeaders(Map<String, String> headers) {
+    public TxRestNBRequest setHeaders(Map<String, String> headers) {
         this.headers = headers;
         return this;
     }
 
-    public TxRestRequest setQueryParams(Map<String, String> queryParams) {
+    public TxRestNBRequest setQueryParams(Map<String, String> queryParams) {
         this.queryParams = queryParams;
         return this;
     }
