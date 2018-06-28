@@ -1,10 +1,8 @@
-package service;
+package infra;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import control.RequestManager;
-import control.ServiceProviderFactory;
-import datapath.DataPathManager;
+import serviceproviders.ServiceProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,31 +16,19 @@ public class Akkagen {
     private final Logger log = LoggerFactory.getLogger(Akkagen.class);
     private final String hostname = "localhost";
     private final int port = 9000;
-    private ActorRef dataPathManager;
-    private RequestManager requestManager;
+    private ActorRef runtimeService;
+    private ManagementService managementService;
     private ServiceProviderFactory spFactory;
     private ActorSystem system;
 
     public Akkagen() {
     }
 
-    public ActorRef getDataPathManager() {
-        return dataPathManager;
-    }
-
-    public RequestManager getRequestManager() {
-        return requestManager;
-    }
-
-    public ActorSystem getSystem() {
-        return system;
-    }
-
     public void initialize(){
         this.system = ActorSystem.create("akkagen");
-        this.requestManager = new RequestManager(hostname, port, system);
-        this.dataPathManager = system.actorOf(DataPathManager.props(), "datapathmanager");
-        this.spFactory = new ServiceProviderFactory(this.requestManager);
+        this.managementService = new ManagementService(hostname, port, system);
+        this.runtimeService = system.actorOf(RuntimeService.props(system), "datapathmanager");
+        this.spFactory = new ServiceProviderFactory();
     }
 
     public static Akkagen getInstance(){
@@ -54,6 +40,22 @@ public class Akkagen {
             }
         }
         return akkagen;
+    }
+
+    public ActorRef getRuntimeService() {
+        return runtimeService;
+    }
+
+    public ManagementService getManagementService() {
+        return managementService;
+    }
+
+    public ActorSystem getSystem() {
+        return system;
+    }
+
+    public ServiceProviderFactory getServiceProviderFactory() {
+        return spFactory;
     }
 
     public static void main(String[] args) {

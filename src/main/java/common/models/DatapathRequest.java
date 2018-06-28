@@ -1,7 +1,10 @@
 package common.models;
 
+import serviceproviders.management.models.AbstractNBRequest;
+
 public class DatapathRequest {
 
+    private String path;
     private String requestId;
     private ActionType action;
     private OperationType operation;
@@ -9,6 +12,10 @@ public class DatapathRequest {
 
     public DatapathRequest(){
 
+    }
+
+    public String getPath() {
+        return path;
     }
 
     public String getRequestId() {
@@ -25,6 +32,12 @@ public class DatapathRequest {
 
     public AbstractNBRequest getAbstractNBRequest() {
         return abstractNBRequest;
+    }
+
+
+    public DatapathRequest setPath(String path) {
+        this.path = path;
+        return this;
     }
 
     public DatapathRequest setRequestId(String requestId) {

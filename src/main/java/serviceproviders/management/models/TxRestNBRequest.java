@@ -1,4 +1,4 @@
-package common.models;
+package serviceproviders.management.models;
 
 import java.util.Map;
 

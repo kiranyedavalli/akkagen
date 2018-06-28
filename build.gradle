@@ -28,6 +28,7 @@ dependencies {
     compile 'com.typesafe.akka:akka-http-jackson_2.11:10.0.9'
     compile 'com.typesafe.akka:akka-stream_2.11:2.5.3'
     compile 'com.google.code.gson:gson:2.8.2'
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
     compile group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.25'
 
     // Use JUnit test framework
@@ -35,5 +36,5 @@ dependencies {
 }
 
 // Define the main class for the application
-mainClassName = 'AkkagenMain'
+mainClassName = 'Akkagen'
 
