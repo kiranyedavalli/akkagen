@@ -1,74 +1,117 @@
 package serviceproviders;
 
+import akka.actor.ActorRef;
 import common.exceptions.AkkagenException;
 import common.exceptions.AkkagenExceptionType;
+import common.models.AbstractNBRequest;
 import common.models.ActionType;
-import infra.Akkagen;
-import serviceproviders.management.models.AbstractNBRequest;
+import common.models.DatapathRequest;
+import common.models.NBInput;
+import common.utils.TriFunction;
 import common.utils.utils;
-import serviceproviders.ServiceProvider;
+import infra.Akkagen;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public abstract class ManagementServiceProvider extends ServiceProvider {
+public abstract class ManagementServiceProvider implements ServiceProvider {
 
     private ConcurrentHashMap<String, AbstractNBRequest> storage = new ConcurrentHashMap<>();
+    private TriFunction<String, ActionType, AbstractNBRequest, DatapathRequest> createDRBehavior = (p, a, r) -> new DatapathRequest()
+            .setPath(p)
+            .setId(r.getId())
+            .setAction(a)
+            .setAbstractNBRequest(r);
+    private TriFunction<String, ActionType, AbstractNBRequest, DatapathRequest> deleteDRBehavior = (i, a, r) -> new DatapathRequest()
+            .setId(i)
+            .setAction(a);
+    /*
+    * Methods that MUST be implemented by service providers
+    */
 
-
-    public ManagementServiceProvider(){
-        super();
-    }
-
-    // Utility Functions
-
-    private Class getSupportedNBRequestClass(){
-        return this.getClass();
-    }
-
-    private AbstractNBRequest getNBRequestFromJson(String json) {
-        return (AbstractNBRequest) utils.getObjectFromJson(json, getSupportedNBRequestClass());
-    }
-
-    // Storage functions
-
-    private AbstractNBRequest addToStorage(AbstractNBRequest req) throws AkkagenException {
-        //TODO: update storage
-        return req;
-    }
-
-    private AbstractNBRequest updateToStorage(AbstractNBRequest req) throws AkkagenException {
-        //TODO: update storage
-        return req;
-    }
-
-    private void deleteFromStorage(String id) throws AkkagenException {
-        //TODO: update storage
-    }
-
-    private AbstractNBRequest store(AbstractNBRequest req, Function<AbstractNBRequest, AbstractNBRequest> storeBehavior) throws AkkagenException {
-        return storeBehavior.apply(req);
-    }
-
-    // Methods to be implemented by service providers
-
-    protected AbstractNBRequest validateAndGetNBRequest(AbstractNBRequest req) throws AkkagenException{
+    protected AbstractNBRequest validateAndGetNBRequest(AbstractNBRequest req) throws AkkagenException {
         // If no implementation the req is valid
         return req;
     }
 
-    // Public methods
+    /*
+    * public methods
+    */
 
-    public AbstractNBRequest createNBRequest(String json) throws AkkagenException{
-        return store(validateAndGetNBRequest(getNBRequestFromJson(json)), this::addToStorage);
+    public ManagementServiceProvider(){ }
+
+    public AbstractNBRequest handleRequest(NBInput input) throws AkkagenException {
+
+        // Validate the input and send it to datapath
+        AbstractNBRequest req = input.getBody();
+        ActionType actionType = input.getAction();
+        String id = input.getQueryParams().get("id");
+        switch (actionType) {
+            case CREATE:
+                if(req == null){
+                    throw new AkkagenException("The request object is empty", AkkagenExceptionType.BAD_REQUEST);
+                }
+                store(validateAndGetNBRequest(req), r -> storage.put(r.getId(), r));
+                sendToDatapath(createDatapathRequest(input.getPath(), actionType, req, createDRBehavior));
+                return req;
+            case UPDATE:
+                if(req == null){
+                    throw new AkkagenException("The request object is empty", AkkagenExceptionType.BAD_REQUEST);
+                }
+                store(validateAndGetNBRequest(req), r -> {
+                    if(storage.keySet().contains(r.getId())){
+                        storage.replace(r.getId(), r);
+                    }
+                    else{
+                        throw new AkkagenException("Update: Resource does not exist", AkkagenExceptionType.NOT_FOUND);
+                    }
+                });
+                sendToDatapath(createDatapathRequest(input.getPath(), actionType, req, createDRBehavior));
+                return req;
+            case DELETE:
+                if(StringUtils.isBlank(id)){
+                    throw new AkkagenException("The id is blank", AkkagenExceptionType.BAD_REQUEST);
+                }
+                sendToDatapath(createDatapathRequest(id, actionType,null, deleteDRBehavior));
+                if(storage.keySet().contains(id)){
+                    storage.remove(id);
+                }
+                else{
+                    throw new AkkagenException("Update: Resource does not exist", AkkagenExceptionType.NOT_FOUND);
+                }
+
+                return null;
+            case GET:
+                if(StringUtils.isBlank(id)){
+                    throw new AkkagenException("The id is blank", AkkagenExceptionType.BAD_REQUEST);
+                }
+                if(storage.keySet().contains(id)){
+                    return storage.get(id);
+                }
+                else{
+                    throw new AkkagenException("Update: Resource does not exist", AkkagenExceptionType.NOT_FOUND);
+                }
+            case GETALL:
+                //TODO
+            default:
+                throw new AkkagenException("method not supported", AkkagenExceptionType.BAD_REQUEST);
+        }
+
     }
 
-    public AbstractNBRequest updateNBRequest(String json) throws AkkagenException{
-        return store(getNBRequestFromJson(json), this::updateToStorage);
+    private DatapathRequest createDatapathRequest(String path, ActionType action, AbstractNBRequest req,
+                                                  TriFunction<String, ActionType, AbstractNBRequest, DatapathRequest> behavior){
+        return behavior.apply(path, action, req);
     }
 
-    public void deleteNBRequest(String id) throws AkkagenException{
-        deleteFromStorage(id);
+    private void sendToDatapath(DatapathRequest req){
+        Akkagen.getInstance().getRuntimeService().tell(req, ActorRef.noSender());
+    }
+
+    private void store(AbstractNBRequest req, Consumer<AbstractNBRequest> storeBehavior) throws AkkagenException {
+        storeBehavior.accept(req);
     }
 }

@@ -1,13 +1,10 @@
-package serviceproviders.management.models;
-
-import common.models.OperationType;
+package common.models;
 
 public abstract class AbstractNBRequest {
 
     private String id;
     private String name;
     private String description;
-    private OperationType operation;
 
     public AbstractNBRequest() {
     }
@@ -22,10 +19,6 @@ public abstract class AbstractNBRequest {
         return description;
     }
 
-    public OperationType getOperation() {
-        return operation;
-    }
-
     public AbstractNBRequest setId(String id) {
         this.id = id;
         return this;
@@ -36,11 +29,6 @@ public abstract class AbstractNBRequest {
     }
     public AbstractNBRequest setDescription(String description) {
         this.description = description;
-        return this;
-    }
-
-    public AbstractNBRequest setOperation(OperationType operation) {
-        this.operation = operation;
         return this;
     }
 }

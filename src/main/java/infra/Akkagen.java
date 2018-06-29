@@ -17,7 +17,6 @@ public class Akkagen {
     private final String hostname = "localhost";
     private final int port = 9000;
     private ActorRef runtimeService;
-    private ManagementService managementService;
     private ServiceProviderFactory spFactory;
     private ActorSystem system;
 
@@ -26,7 +25,6 @@ public class Akkagen {
 
     public void initialize(){
         this.system = ActorSystem.create("akkagen");
-        this.managementService = new ManagementService(hostname, port, system);
         this.runtimeService = system.actorOf(RuntimeService.props(system), "datapathmanager");
         this.spFactory = new ServiceProviderFactory();
     }
@@ -44,10 +42,6 @@ public class Akkagen {
 
     public ActorRef getRuntimeService() {
         return runtimeService;
-    }
-
-    public ManagementService getManagementService() {
-        return managementService;
     }
 
     public ActorSystem getSystem() {

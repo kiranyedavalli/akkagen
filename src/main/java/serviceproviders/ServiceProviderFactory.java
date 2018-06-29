@@ -2,7 +2,6 @@ package serviceproviders;
 
 
 import common.exceptions.AkkagenException;
-import serviceproviders.management.TxRestManagementServiceProvider;
 import serviceproviders.runtime.TxRestRuntimeServiceProvider;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,9 +12,6 @@ public class ServiceProviderFactory {
     private ConcurrentHashMap<String, RuntimeServiceProvider> runtimeServiceProviders = new ConcurrentHashMap<>();
 
     public ServiceProviderFactory(){
-
-        // Management Service Providers
-        addManagementServiceProvider(new TxRestManagementServiceProvider());
 
         // Runtime Service Providers
         addRuntimeServiceProvider(new TxRestRuntimeServiceProvider());

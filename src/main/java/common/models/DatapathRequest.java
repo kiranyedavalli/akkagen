@@ -1,33 +1,26 @@
 package common.models;
 
-import serviceproviders.management.models.AbstractNBRequest;
-
 public class DatapathRequest {
 
+    private String id;
     private String path;
-    private String requestId;
     private ActionType action;
-    private OperationType operation;
     private AbstractNBRequest abstractNBRequest;
 
     public DatapathRequest(){
 
     }
 
+    public String getId() {
+        return id;
+    }
+
     public String getPath() {
         return path;
     }
 
-    public String getRequestId() {
-        return requestId;
-    }
-
     public ActionType getAction() {
         return action;
-    }
-
-    public OperationType getOperation() {
-        return operation;
     }
 
     public AbstractNBRequest getAbstractNBRequest() {
@@ -40,18 +33,13 @@ public class DatapathRequest {
         return this;
     }
 
-    public DatapathRequest setRequestId(String requestId) {
-        this.requestId = requestId;
+    public DatapathRequest setId(String id) {
+        this.id = id;
         return this;
     }
 
     public DatapathRequest setAction(ActionType action) {
         this.action = action;
-        return this;
-    }
-
-    public DatapathRequest setOperation(OperationType operation) {
-        this.operation = operation;
         return this;
     }
 

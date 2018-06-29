@@ -7,7 +7,7 @@ import serviceproviders.ServiceProvider;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-public abstract class RuntimeServiceProvider extends ServiceProvider {
+public abstract class RuntimeServiceProvider implements ServiceProvider {
 
     private ConcurrentHashMap<String, DatapathRequest> storage = new ConcurrentHashMap<>();
 

@@ -1,11 +1,14 @@
 package serviceproviders.management.models;
 
+import common.models.AbstractNBRequest;
+
 import java.util.Map;
 
 public class TxRestNBRequest extends AbstractNBRequest {
 
     private String url;
     private String body;
+    private String method;
     private Map<String, String> headers;
     private Map<String, String> queryParams;
 
@@ -18,6 +21,10 @@ public class TxRestNBRequest extends AbstractNBRequest {
 
     public String getBody() {
         return body;
+    }
+
+    public String getMethod() {
+        return method;
     }
 
     public Map<String, String> getHeaders() {
@@ -35,6 +42,11 @@ public class TxRestNBRequest extends AbstractNBRequest {
 
     public TxRestNBRequest setBody(String body) {
         this.body = body;
+        return this;
+    }
+
+    public TxRestNBRequest setMethod(String method) {
+        this.method = method;
         return this;
     }
 

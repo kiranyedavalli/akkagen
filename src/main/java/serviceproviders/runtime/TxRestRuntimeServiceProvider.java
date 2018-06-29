@@ -1,21 +1,19 @@
 package serviceproviders.runtime;
 
 import common.exceptions.AkkagenException;
-import common.models.DatapathRequest;
+import common.models.PathConstants;
 import serviceproviders.RuntimeServiceProvider;
-import serviceproviders.management.models.AbstractNBRequest;
+import common.models.AbstractNBRequest;
 
 public class TxRestRuntimeServiceProvider extends RuntimeServiceProvider {
 
-    private final String path = "/tx/rest";
+    @Override
+    public String getPath() {
+        return PathConstants.__TX__REST;
+    }
 
-   public TxRestRuntimeServiceProvider(){
+    public TxRestRuntimeServiceProvider(){
        super();
-       setPath(path);
-   }
-
-   protected void validate(AbstractNBRequest req) throws AkkagenException{
-       // If no implementation the req is valid
    }
 
 }
