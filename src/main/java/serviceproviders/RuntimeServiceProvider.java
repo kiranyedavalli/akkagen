@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class RuntimeServiceProvider implements ServiceProvider {
 
-    private ConcurrentHashMap<String, DatapathRequest> storage = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, DatapathRequest> storage = new ConcurrentHashMap<String, DatapathRequest>();
 
     public void createRuntimeService(DatapathRequest dp){
 
@@ -19,7 +19,7 @@ public abstract class RuntimeServiceProvider implements ServiceProvider {
 
     }
 
-    public void deleteRuntimService(String id) {
+    public void deleteRuntimService(DatapathRequest dp) {
 
     }
 

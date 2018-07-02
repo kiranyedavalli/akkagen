@@ -8,8 +8,8 @@ public class NBInput {
     private ActionType action;
     private AbstractNBRequest body;
 
-    private HashMap<String, String> headers;
-    private HashMap<String, String> queryParams;
+    private HashMap<String, String> headers = new HashMap<>();
+    private HashMap<String, String> queryParams = new HashMap<>();
 
     public NBInput() {
     }
@@ -49,13 +49,13 @@ public class NBInput {
         return this;
     }
 
-    public NBInput setHeaders(HashMap<String, String> headers) {
-        this.headers = headers;
+    public NBInput addToHeaders(String key, String value) {
+        this.headers.put(key, value);
         return this;
     }
 
-    public NBInput setQueryParams(HashMap<String, String> queryParams) {
-        this.queryParams = queryParams;
+    public NBInput addToQueryParams(String key, String value) {
+        this.queryParams.put(key, value);
         return this;
     }
 }

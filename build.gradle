@@ -7,34 +7,59 @@
  */
 
 // Apply the java plugin to add support for Java
-apply plugin: 'java'
+//apply plugin: 'java'
 
 // Apply the application plugin to add support for building an application
-apply plugin: 'application'
+//apply plugin: 'application'
+
+//apply plugin: 'war'
+
+//apply plugin: 'org.akhikhl.gretty:1.4.2'
+
+plugins {
+    id 'java'
+    id 'application'
+    id 'war'
+    id 'eclipse-wtp'
+}
 
 // In this section you declare where to find the dependencies of your project
 repositories {
     // Use jcenter for resolving your dependencies.
     // You can declare any Maven/Ivy/file repository here.
     jcenter()
+    mavenCentral()
 }
 
 dependencies {
     // This dependency is found on compile classpath of this component and consumers.
-    compile 'com.google.guava:guava:23.0'
+
+    // Akka Support
     compile 'com.typesafe.akka:akka-actor_2.12:2.5.3'
     compile 'com.typesafe.akka:akka-http_2.11:10.0.9'
     compile 'com.typesafe.akka:akka-http-core_2.11:10.0.9'
     compile 'com.typesafe.akka:akka-http-jackson_2.11:10.0.9'
     compile 'com.typesafe.akka:akka-stream_2.11:2.5.3'
+
+    // Utilities
+    compile 'com.google.guava:guava:23.0'
     compile 'com.google.code.gson:gson:2.8.2'
     compile 'com.fasterxml.jackson.core:jackson-annotations:2.7.5'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.7.5'
-    compile group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0'
-    compile 'org.glassfish.jersey.containers:jersey-container-servlet:2.25'
-    compile 'javax.servlet:javax.servlet-api:3.1.0'
     compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
+
+    // Logging support
     compile group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.25'
+    testCompile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+    compile group: 'ch.qos.logback', name: 'logback-core', version: '1.2.3'
+    compile group: 'ch.qos.logback', name: 'logback-access', version: '1.2.3'
+
+    // Webapp support
+   	compile group: 'org.glassfish.jersey.core', name: 'jersey-server', version: '2.7'
+    compile group: 'org.glassfish.jersey.containers', name: 'jersey-container-servlet-core', version: '2.7'
+    compile group: 'org.glassfish.jersey.containers', name: 'jersey-container-jetty-http', version: '2.7'
+    compile group: 'org.glassfish.jersey.media', name: 'jersey-media-moxy', version: '2.7'
+    compile group: 'org.eclipse.jetty.aggregate', name: 'jetty-all', version: '9.3.0.M1'
 
     // Use JUnit test framework
     testCompile 'junit:junit:4.12'

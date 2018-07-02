@@ -33,3 +33,4 @@ Jenkinsfile
 
 vcs.xml
 *.tar.gz
+/.metadata/

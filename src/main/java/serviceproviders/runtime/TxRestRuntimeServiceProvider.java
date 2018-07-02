@@ -9,11 +9,10 @@ public class TxRestRuntimeServiceProvider extends RuntimeServiceProvider {
 
     @Override
     public String getPath() {
-        return PathConstants.__TX__REST;
+        return PathConstants.__TX_REST;
     }
 
     public TxRestRuntimeServiceProvider(){
-       super();
-   }
+    }
 
 }

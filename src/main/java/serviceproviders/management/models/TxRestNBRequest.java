@@ -1,15 +1,23 @@
 package serviceproviders.management.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import common.models.AbstractNBRequest;
 
 import java.util.Map;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TxRestNBRequest extends AbstractNBRequest {
 
+    @JsonProperty
     private String url;
+    @JsonProperty
     private String body;
+    @JsonProperty
     private String method;
+    @JsonProperty
     private Map<String, String> headers;
+    @JsonProperty
     private Map<String, String> queryParams;
 
     public TxRestNBRequest() {

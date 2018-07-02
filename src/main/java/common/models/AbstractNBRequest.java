@@ -1,9 +1,16 @@
 package common.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class AbstractNBRequest {
 
+    @JsonProperty
     private String id;
+    @JsonProperty
     private String name;
+    @JsonProperty
     private String description;
 
     public AbstractNBRequest() {
