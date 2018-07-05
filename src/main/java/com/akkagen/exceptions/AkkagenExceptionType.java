@@ -4,6 +4,7 @@ public enum AkkagenExceptionType {
     DUPLICATE,
     INTERAL_ERROR,
     BAD_REQUEST,
-    NOT_FOUND
+    NOT_FOUND,
+    STORAGE
 }
 

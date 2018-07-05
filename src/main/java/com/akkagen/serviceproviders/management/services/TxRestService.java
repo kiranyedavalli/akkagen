@@ -12,6 +12,7 @@ import com.akkagen.models.TxRestNBRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.HashMap;
 import java.util.UUID;
 
 @Path(PathConstants.__TX_REST)
@@ -50,7 +51,7 @@ public class TxRestService extends ManagementServiceProvider {
         logger.debug("In DELETE call");
         try{
             handleRequest(new NBInput().setPath(getPath()).setAction(ActionType.DELETE).addToQueryParams("id", id));
-            return Response.accepted().entity(id).build();
+            return Response.accepted().build();
         }
         catch (AkkagenException e){
             return handleAkkagenException(e);

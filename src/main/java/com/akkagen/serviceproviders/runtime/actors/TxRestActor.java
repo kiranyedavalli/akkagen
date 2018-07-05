@@ -24,6 +24,7 @@ public class TxRestActor extends AkkagenAbstractActor {
     protected void processRequest(AbstractNBRequest req) {
         this.txRestNBRequest = (TxRestNBRequest) req;
         //TODO: do the rest client
+        System.out.println("In TxRestActor " + getSelf());
     }
 
 }

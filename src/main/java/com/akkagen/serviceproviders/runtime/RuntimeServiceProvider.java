@@ -3,6 +3,8 @@ package com.akkagen.serviceproviders.runtime;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
+import com.akkagen.exceptions.AkkagenException;
+import com.akkagen.exceptions.AkkagenExceptionType;
 import com.akkagen.models.AbstractNBRequest;
 import com.akkagen.utils.TriConsumer;
 import com.akkagen.serviceproviders.runtime.actors.messages.RunMessage;
@@ -14,6 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RuntimeServiceProvider {
 
     //TODO: logging
+    private ConcurrentHashMap<String, ArrayList<ActorRef>> actorMap = new ConcurrentHashMap<>();
     private ActorSystem system;
     private Props props;
     private String path;
@@ -24,17 +27,19 @@ public class RuntimeServiceProvider {
         this.path = path;
     }
 
-    private ConcurrentHashMap<String, ArrayList<ActorRef>> actorMap = new ConcurrentHashMap<>();
-
     private void addActorList(String id, ArrayList<ActorRef> list) {
         actorMap.put(id, list);
     }
-
-    private void deleteActorList(String id) {
+    private void deleteActorList(String id) throws AkkagenException {
+        if(!actorMap.keySet().contains(id)){
+            throw new AkkagenException("Nothing to delete for " + id, AkkagenExceptionType.NOT_FOUND);
+        }
         actorMap.remove(id);
     }
-
     private ArrayList<ActorRef> getActorList(String id) {
+        if(!actorMap.keySet().contains(id)){
+            throw new AkkagenException("Nothing to get for " + id, AkkagenExceptionType.NOT_FOUND);
+        }
         return actorMap.get(id);
     }
 
