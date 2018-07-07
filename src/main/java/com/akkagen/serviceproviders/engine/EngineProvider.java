@@ -1,19 +1,20 @@
-package com.akkagen.serviceproviders.runtime;
+package com.akkagen.serviceproviders.engine;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import com.akkagen.exceptions.AkkagenException;
 import com.akkagen.exceptions.AkkagenExceptionType;
-import com.akkagen.models.AbstractNBRequest;
+import com.akkagen.models.AbstractEngineDefinition;
 import com.akkagen.utils.TriConsumer;
-import com.akkagen.serviceproviders.runtime.actors.messages.RunMessage;
-import com.akkagen.serviceproviders.runtime.actors.messages.StopMessage;
+import com.akkagen.serviceproviders.engine.engineactors.messages.RunMessage;
+import com.akkagen.serviceproviders.engine.engineactors.messages.StopMessage;
 
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.IntStream;
 
-public class RuntimeServiceProvider {
+public class EngineProvider {
 
     //TODO: logging
     private ConcurrentHashMap<String, ArrayList<ActorRef>> actorMap = new ConcurrentHashMap<>();
@@ -21,7 +22,7 @@ public class RuntimeServiceProvider {
     private Props props;
     private String path;
 
-    public RuntimeServiceProvider(ActorSystem system, Props props, String path){
+    public EngineProvider(ActorSystem system, Props props, String path){
         this.system = system;
         this.props = props;
         this.path = path;
@@ -43,8 +44,8 @@ public class RuntimeServiceProvider {
         return actorMap.get(id);
     }
 
-    private void runActors(AbstractNBRequest req, String id, ArrayList<ActorRef> actorList,
-                           TriConsumer<AbstractNBRequest, String, ArrayList<ActorRef>> runBehavior){
+    private void runActors(AbstractEngineDefinition req, String id, ArrayList<ActorRef> actorList,
+                           TriConsumer<AbstractEngineDefinition, String, ArrayList<ActorRef>> runBehavior){
         runBehavior.accept(req, id, actorList);
     }
 
@@ -60,21 +61,21 @@ public class RuntimeServiceProvider {
         return this.path;
     }
 
-    public void createRuntimeService(AbstractNBRequest req) {
+    public void createEngines(AbstractEngineDefinition req) {
         ArrayList<ActorRef> actorList = new ArrayList<>();
-        for(int i=0; i<req.getInstances(); i++ ){
+        IntStream.range(0,req.getInstances()).forEach(i -> {
             ActorRef actor = getSystem().actorOf(getProps(), getPath()+i);
             actorList.add(actor);
             addActorList(req.getId(), actorList);
-        }
+        });
         runActors(req, req.getId(), getActorList(req.getId()), (r, i, l) -> l.forEach(actor -> actor.tell(new RunMessage(r), ActorRef.noSender())));
     }
 
-    public void updateRuntimeService(AbstractNBRequest req) {
+    public void updateEngines(AbstractEngineDefinition req) {
         runActors(req, req.getId(), getActorList(req.getId()), (r, i, l) -> l.forEach(actor -> actor.tell(new RunMessage(r), ActorRef.noSender())));
     }
 
-    public void deleteRuntimService(String id) {
+    public void deleteEngines(String id) {
         runActors(null, id, getActorList(id), (r, i, l) -> l.forEach(actor -> actor.tell(new StopMessage(i), ActorRef.noSender())));
         deleteActorList(id);
     }

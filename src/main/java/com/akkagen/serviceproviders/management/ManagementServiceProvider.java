@@ -4,9 +4,9 @@ import akka.actor.ActorRef;
 import com.akkagen.Akkagen;
 import com.akkagen.exceptions.AkkagenException;
 import com.akkagen.exceptions.AkkagenExceptionType;
-import com.akkagen.models.AbstractNBRequest;
+import com.akkagen.models.AbstractEngineDefinition;
 import com.akkagen.models.ActionType;
-import com.akkagen.models.RuntimeRequest;
+import com.akkagen.models.EngineInput;
 import com.akkagen.models.NBInput;
 import com.akkagen.utils.TriFunction;
 import org.apache.commons.lang3.StringUtils;
@@ -21,22 +21,22 @@ public abstract class ManagementServiceProvider {
 
     //TODO: Logger
     private final Logger logger = LoggerFactory.getLogger(ManagementServiceProvider.class);
-    private BiFunction<ActionType, AbstractNBRequest, Response> createUpdateBehavior = (t, r) -> {
+    private BiFunction<ActionType, AbstractEngineDefinition, Response> createNBInputBehavior = (t, r) -> {
         try {
-            AbstractNBRequest req = handleRequest(new NBInput().setPath(this.getPath()).setAction(t).setAbstractNBRequest(r));
+            AbstractEngineDefinition req = handleRequest(new NBInput().setPath(this.getPath()).setAction(t).setAbstractEngineDefinition(r));
             return Response.accepted().entity(req).build();
         } catch (AkkagenException e) {
             return handleAkkagenException(e);
         }
     };
 
-    private TriFunction<String, ActionType, AbstractNBRequest, RuntimeRequest> createDRBehavior = (p, a, r) -> new RuntimeRequest()
+    private TriFunction<String, ActionType, AbstractEngineDefinition, EngineInput> createDRBehavior = (p, a, r) -> new EngineInput()
             .setPath(p)
             .setAction(a)
-            .setAbstractNBRequest(r);
+            .setAbstractEngineDefinition(r);
 
-    protected Response processRequest(ActionType type, AbstractNBRequest req,
-                                    BiFunction<ActionType, AbstractNBRequest, Response> behavior) {
+    protected Response processRequest(ActionType type, AbstractEngineDefinition req,
+                                    BiFunction<ActionType, AbstractEngineDefinition, Response> behavior) {
         return behavior.apply(type, req);
     }
 
@@ -61,7 +61,7 @@ public abstract class ManagementServiceProvider {
 
     public abstract String getPath();
 
-    protected AbstractNBRequest validateAndGetNBRequest(AbstractNBRequest req) throws AkkagenException {
+    protected AbstractEngineDefinition validateAndGetEngineDefinition(AbstractEngineDefinition req) throws AkkagenException {
         // If no implementation the req is valid
         return req;
     }
@@ -72,33 +72,33 @@ public abstract class ManagementServiceProvider {
 
     public ManagementServiceProvider(){ }
 
-    public BiFunction<ActionType, AbstractNBRequest, Response> getCreateUpdateBehavior() {
-        return createUpdateBehavior;
+    public BiFunction<ActionType, AbstractEngineDefinition, Response> getCreateNBInputBehavior() {
+        return createNBInputBehavior;
     }
 
-    public AbstractNBRequest handleRequest(NBInput input) throws AkkagenException {
+    public AbstractEngineDefinition handleRequest(NBInput input) throws AkkagenException {
 
         // Validate the input and send it to datapath
-        AbstractNBRequest req = null;
+        AbstractEngineDefinition req = null;
         ActionType actionType = input.getAction();
         String id = null;
         switch (actionType) {
             case CREATE:
-                req = input.getAbstractNBRequest();
+                req = input.getAbstractEngineDefinition();
                 if(req == null){
                     throw new AkkagenException("The request object is empty", AkkagenExceptionType.BAD_REQUEST);
                 }
                 logger.debug("req: " + req.toString());
-                store(validateAndGetNBRequest(req), r -> getStorage().createNBRequest(r));
+                store(validateAndGetEngineDefinition(req), r -> getStorage().createNBRequest(r));
                 sendToDatapath(createDatapathRequest(input.getPath(), actionType, req, createDRBehavior));
                 return req;
             case UPDATE:
-                req = input.getAbstractNBRequest();
+                req = input.getAbstractEngineDefinition();
                 if(req == null){
                     throw new AkkagenException("The request object is empty", AkkagenExceptionType.BAD_REQUEST);
                 }
                 logger.debug("req: " + req.toString());
-                store(validateAndGetNBRequest(req), r -> getStorage().updateNBRequest(r));
+                store(validateAndGetEngineDefinition(req), r -> getStorage().updateNBRequest(r));
                 sendToDatapath(createDatapathRequest(input.getPath(), actionType, req, createDRBehavior));
                 return req;
             case DELETE:
@@ -124,16 +124,16 @@ public abstract class ManagementServiceProvider {
 
     }
 
-    private RuntimeRequest createDatapathRequest(String path, ActionType action, AbstractNBRequest req,
-                                                 TriFunction<String, ActionType, AbstractNBRequest, RuntimeRequest> behavior){
+    private EngineInput createDatapathRequest(String path, ActionType action, AbstractEngineDefinition req,
+                                              TriFunction<String, ActionType, AbstractEngineDefinition, EngineInput> behavior){
         return behavior.apply(path, action, req);
     }
 
-    private void sendToDatapath(RuntimeRequest req){
+    private void sendToDatapath(EngineInput req){
         Akkagen.getInstance().getRuntimeService().tell(req, ActorRef.noSender());
     }
 
-    private void store(AbstractNBRequest req, Consumer<AbstractNBRequest> storeBehavior) throws AkkagenException {
+    private void store(AbstractEngineDefinition req, Consumer<AbstractEngineDefinition> storeBehavior) throws AkkagenException {
         storeBehavior.accept(req);
     }
 }

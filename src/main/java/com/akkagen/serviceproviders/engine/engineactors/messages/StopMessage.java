@@ -1,4 +1,4 @@
-package com.akkagen.serviceproviders.runtime.actors.messages;
+package com.akkagen.serviceproviders.engine.engineactors.messages;
 
 public class StopMessage {
 

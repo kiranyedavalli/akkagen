@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public abstract class AbstractNBRequest {
+public abstract class AbstractEngineDefinition {
 
     @JsonProperty
     private String id;
@@ -17,7 +17,7 @@ public abstract class AbstractNBRequest {
     @JsonProperty
     private int periodicity;
 
-    public AbstractNBRequest() {
+    public AbstractEngineDefinition() {
     }
 
     public String getId() {
@@ -36,23 +36,23 @@ public abstract class AbstractNBRequest {
         return periodicity;
     }
 
-    public AbstractNBRequest setId(String id) {
+    public AbstractEngineDefinition setId(String id) {
         this.id = id;
         return this;
     }
-    public AbstractNBRequest setName(String name) {
+    public AbstractEngineDefinition setName(String name) {
         this.name = name;
         return this;
     }
-    public AbstractNBRequest setDescription(String description) {
+    public AbstractEngineDefinition setDescription(String description) {
         this.description = description;
         return this;
     }
-    public AbstractNBRequest setInstances(int instances) {
+    public AbstractEngineDefinition setInstances(int instances) {
         this.instances = instances;
         return this;
     }
-    public AbstractNBRequest setPeriodicity(int periodicity) {
+    public AbstractEngineDefinition setPeriodicity(int periodicity) {
         this.periodicity = periodicity;
         return this;
     }

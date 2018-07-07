@@ -6,7 +6,7 @@ public class NBInput {
 
     private String path;
     private ActionType action;
-    private AbstractNBRequest abstractNBRequest;
+    private AbstractEngineDefinition abstractEngineDefinition;
 
     private HashMap<String, String> headers = new HashMap<>();
     private HashMap<String, String> queryParams = new HashMap<>();
@@ -22,8 +22,8 @@ public class NBInput {
         return path;
     }
 
-    public AbstractNBRequest getAbstractNBRequest() {
-        return abstractNBRequest;
+    public AbstractEngineDefinition getAbstractEngineDefinition() {
+        return abstractEngineDefinition;
     }
 
     public HashMap<String, String> getHeaders() {
@@ -44,8 +44,8 @@ public class NBInput {
         return this;
     }
 
-    public NBInput setAbstractNBRequest(AbstractNBRequest body) {
-        this.abstractNBRequest = body;
+    public NBInput setAbstractEngineDefinition(AbstractEngineDefinition body) {
+        this.abstractEngineDefinition = body;
         return this;
     }
 

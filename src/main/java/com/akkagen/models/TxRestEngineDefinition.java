@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TxRestNBRequest extends AbstractNBRequest {
+public class TxRestEngineDefinition extends AbstractEngineDefinition {
 
     @JsonProperty
     private String url;
@@ -19,7 +19,7 @@ public class TxRestNBRequest extends AbstractNBRequest {
     @JsonProperty
     private Map<String, String> queryParams;
 
-    public TxRestNBRequest() {
+    public TxRestEngineDefinition() {
     }
 
     public String getUrl() {
@@ -42,27 +42,27 @@ public class TxRestNBRequest extends AbstractNBRequest {
         return queryParams;
     }
 
-    public TxRestNBRequest setUrl(String url) {
+    public TxRestEngineDefinition setUrl(String url) {
         this.url = url;
         return this;
     }
 
-    public TxRestNBRequest setBody(String body) {
+    public TxRestEngineDefinition setBody(String body) {
         this.body = body;
         return this;
     }
 
-    public TxRestNBRequest setMethod(String method) {
+    public TxRestEngineDefinition setMethod(String method) {
         this.method = method;
         return this;
     }
 
-    public TxRestNBRequest setHeaders(Map<String, String> headers) {
+    public TxRestEngineDefinition setHeaders(Map<String, String> headers) {
         this.headers = headers;
         return this;
     }
 
-    public TxRestNBRequest setQueryParams(Map<String, String> queryParams) {
+    public TxRestEngineDefinition setQueryParams(Map<String, String> queryParams) {
         this.queryParams = queryParams;
         return this;
     }

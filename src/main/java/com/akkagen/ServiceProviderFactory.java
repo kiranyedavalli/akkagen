@@ -7,9 +7,9 @@ import com.akkagen.models.PathConstants;
 import com.akkagen.serviceproviders.management.ManagementServiceProvider;
 import com.akkagen.serviceproviders.management.ManagementServiceProviderStorage;
 import com.akkagen.models.RestServer;
-import com.akkagen.serviceproviders.runtime.RuntimeServiceProvider;
+import com.akkagen.serviceproviders.engine.EngineProvider;
 import com.akkagen.serviceproviders.management.services.TxRestService;
-import com.akkagen.serviceproviders.runtime.actors.TxRestActor;
+import com.akkagen.serviceproviders.engine.engineactors.TxRestActor;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -19,7 +19,7 @@ public class ServiceProviderFactory {
     private ConcurrentHashMap<String, ManagementServiceProvider> managementServiceProviderMap = new ConcurrentHashMap<>();
 
 
-    private ConcurrentHashMap<String, RuntimeServiceProvider> runtimeServiceProviders = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, EngineProvider> runtimeServiceProviders = new ConcurrentHashMap<>();
 
     private RestServer mgmtRestServer;
 
@@ -64,10 +64,10 @@ public class ServiceProviderFactory {
 
     private void initializeRuntimeServiceProviders(){
         ActorSystem system = Akkagen.getInstance().getSystem();
-        addRuntimeServiceProvider(new RuntimeServiceProvider(system, TxRestActor.props(system), PathConstants.__TX_REST));
+        addRuntimeServiceProvider(new EngineProvider(system, TxRestActor.props(system), PathConstants.__TX_REST));
     }
 
-    private void addRuntimeServiceProvider(RuntimeServiceProvider sp) throws AkkagenException {
+    private void addRuntimeServiceProvider(EngineProvider sp) throws AkkagenException {
         if(runtimeServiceProviders.keySet().contains(sp.getPath())){
             throw new AkkagenException("The Service provider with prefix " + sp.getPath() + " already exists!!!");
         }
@@ -75,7 +75,7 @@ public class ServiceProviderFactory {
         runtimeServiceProviders.put(sp.getPath(), sp);
     }
 
-    public RuntimeServiceProvider getRuntimeServiceProvider(String path){
+    public EngineProvider getRuntimeServiceProvider(String path){
         return runtimeServiceProviders.getOrDefault(path, null);
     }
 

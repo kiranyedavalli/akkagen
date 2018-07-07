@@ -3,7 +3,7 @@ package com.akkagen;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import com.akkagen.models.PathConstants;
-import com.akkagen.serviceproviders.runtime.RuntimeService;
+import com.akkagen.serviceproviders.engine.EngineStarter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +25,7 @@ public class Akkagen {
 
     public void initialize(){
         this.system = ActorSystem.create("akkagen");
-        this.runtimeService = system.actorOf(RuntimeService.props(), "runtime-service");
+        this.runtimeService = system.actorOf(EngineStarter.props(), "runtime-service");
         this.spFactory = new ServiceProviderFactory();
     }
 
