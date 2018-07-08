@@ -30,7 +30,7 @@ public class TxRestService extends ManagementServiceProvider {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response createTxRest(TxRestEngineDefinition req){
-        logger.debug("In POST call");
+        logger.debug("Received POST call");
         req.setId(UUID.randomUUID().toString());
         return processRequest(ActionType.CREATE, req, getCreateNBInputBehavior());
     }
@@ -39,7 +39,7 @@ public class TxRestService extends ManagementServiceProvider {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response updateTxRest(TxRestEngineDefinition req){
-        logger.debug("In PUT call");
+        logger.debug("Received PUT call");
         return processRequest(ActionType.UPDATE, req, getCreateNBInputBehavior());
     }
 
@@ -47,7 +47,7 @@ public class TxRestService extends ManagementServiceProvider {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response deleteTxRest(@QueryParam("id") String id){
-        logger.debug("In DELETE call");
+        logger.debug("Received DELETE call");
         try{
             handleRequest(new NBInput().setPath(getPath()).setAction(ActionType.DELETE).addToQueryParams("id", id));
             return Response.accepted().build();
@@ -61,7 +61,7 @@ public class TxRestService extends ManagementServiceProvider {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response getTxRestById(@QueryParam("id") String id){
-        logger.debug("In GET call");
+        logger.debug("Received GET call");
         TxRestEngineDefinition res;
         try {
             res = (TxRestEngineDefinition) handleRequest(new NBInput().setPath(getPath())

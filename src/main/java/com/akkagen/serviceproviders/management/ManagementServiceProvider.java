@@ -89,7 +89,7 @@ public abstract class ManagementServiceProvider {
                     throw new AkkagenException("The request object is empty", AkkagenExceptionType.BAD_REQUEST);
                 }
                 logger.debug("req: " + req.toString());
-                store(validateAndGetEngineDefinition(req), r -> getStorage().createNBRequest(r));
+                store(validateAndGetEngineDefinition(req), r -> getStorage().createEngineDefition(r));
                 sendToDatapath(createDatapathRequest(input.getPath(), actionType, req, createDRBehavior));
                 return req;
             case UPDATE:
@@ -98,7 +98,7 @@ public abstract class ManagementServiceProvider {
                     throw new AkkagenException("The request object is empty", AkkagenExceptionType.BAD_REQUEST);
                 }
                 logger.debug("req: " + req.toString());
-                store(validateAndGetEngineDefinition(req), r -> getStorage().updateNBRequest(r));
+                store(validateAndGetEngineDefinition(req), r -> getStorage().updateEngineDefinition(r));
                 sendToDatapath(createDatapathRequest(input.getPath(), actionType, req, createDRBehavior));
                 return req;
             case DELETE:
@@ -106,16 +106,16 @@ public abstract class ManagementServiceProvider {
                 if(StringUtils.isBlank(id)){
                     throw new AkkagenException("The id is blank", AkkagenExceptionType.BAD_REQUEST);
                 }
-                sendToDatapath(createDatapathRequest(input.getPath(), actionType, getStorage().getNBRequestById(id), createDRBehavior));
+                sendToDatapath(createDatapathRequest(input.getPath(), actionType, getStorage().getEngineDefinitionById(id), createDRBehavior));
                 // TODO: Need to get a confirmation that delete is successful before we delete it from storage.
-                getStorage().deleteNBRequestById(id);
+                getStorage().deleteEngineDefinitionById(id);
                 return null;
             case GET:
                 id = input.getQueryParams().get("id");
                 if(StringUtils.isBlank(id)){
                     throw new AkkagenException("The id is blank", AkkagenExceptionType.BAD_REQUEST);
                 }
-                return getStorage().getNBRequestById(id);
+                return getStorage().getEngineDefinitionById(id);
             case GETALL:
                 //TODO
             default:

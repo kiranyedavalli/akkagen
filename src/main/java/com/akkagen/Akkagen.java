@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 public class Akkagen {
 
     private static volatile Akkagen akkagen;
-    private final Logger log = LoggerFactory.getLogger(Akkagen.class);
+    private final Logger logger = LoggerFactory.getLogger(Akkagen.class);
     private ActorSystem system;
     private ActorRef runtimeService;
     private ServiceProviderFactory spFactory;
@@ -52,14 +52,15 @@ public class Akkagen {
         return this.spFactory;
     }
 
-    public Logger getLog() {
-        return this.log;
+    public Logger getLogger() {
+        return this.logger;
     }
 
     public static void main(String[] args) {
         int port = 9000;
+        // The following order is important
         Akkagen.getInstance().initialize();
         Akkagen.getInstance().getServiceProviderFactory().initializeRestServer(PathConstants.__BASE_PATH, port);
-        Akkagen.getInstance().getLog().debug("service.Akkagen Started");
+        Akkagen.getInstance().getLogger().debug("service.Akkagen Started");
     }
 }

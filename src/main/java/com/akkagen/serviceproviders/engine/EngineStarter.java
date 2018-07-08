@@ -11,12 +11,10 @@ import org.slf4j.LoggerFactory;
 
 public class EngineStarter extends AbstractActor {
 
-    //TODO: Logging
-
     private final Logger logger = LoggerFactory.getLogger(EngineStarter.class);
 
     public static Props props(){
-        return Props.create(EngineStarter.class, () -> new EngineStarter());
+        return Props.create(EngineStarter.class, EngineStarter::new);
     }
 
     private EngineStarter(){ }
@@ -24,6 +22,7 @@ public class EngineStarter extends AbstractActor {
     private void processRequest(EngineInput req) throws AkkagenException{
 
         EngineProvider sp = Akkagen.getInstance().getServiceProviderFactory().getRuntimeServiceProvider(req.getPath());
+        logger.debug("Received Engine Input for service provider " + sp.toString());
 
         switch(req.getAction()){
             case CREATE:

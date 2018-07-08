@@ -14,7 +14,6 @@ import java.time.Duration;
 
 public abstract class EngineAbstractActor extends AbstractActorWithTimers {
 
-    //TODO: Lgger
     private final Logger logger = LoggerFactory.getLogger(EngineAbstractActor.class);
     private ActorSystem system;
     private AbstractEngineDefinition abstractEngineDefinition;
@@ -29,7 +28,6 @@ public abstract class EngineAbstractActor extends AbstractActorWithTimers {
     protected void runEngine(AbstractEngineDefinition req){
         // default is do nothing
         // Override this and do something interesting
-        return;
     }
 
     protected AbstractEngineDefinition getAbstractEngineDefinition() {
@@ -44,15 +42,17 @@ public abstract class EngineAbstractActor extends AbstractActorWithTimers {
         if(!id.equals(this.abstractEngineDefinition.getId())){
             throw new AkkagenException("Wrong Actor is called for stopping service!", AkkagenExceptionType.INTERAL_ERROR);
         }
-        System.out.println("Stopping Actor: " + getSelf());
+        logger.debug("Stopping Actor: " + getSelf());
         getContext().stop(getSelf());
     }
 
     private void runService(AbstractEngineDefinition req) {
         setAbstractEngineDefinition(req);
         runEngine(req);
+        logger.debug("Engine " + getSelf() + " started for id: " + req.getId());
         if (req.getPeriodicity() > 0) {
             getTimers().startPeriodicTimer(TICK_KEY, new Tick(), Duration.ofMillis(req.getPeriodicity()));
+            logger.debug("Periodic timer for " + getSelf() + "started for id: " + req.getId() + " of " + req.getPeriodicity() + " milli-seconds");
         }
     }
 

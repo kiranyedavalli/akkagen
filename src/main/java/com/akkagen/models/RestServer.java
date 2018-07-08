@@ -12,6 +12,7 @@ import java.util.HashMap;
 
 public class RestServer {
 
+    //TODO: Logger
     private HashMap<String, String> serviceProviders = new HashMap<>();
     private ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
     private Server jettyServer;

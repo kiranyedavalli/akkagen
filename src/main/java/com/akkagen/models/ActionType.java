@@ -1,5 +1,7 @@
 package com.akkagen.models;
 
+import java.lang.reflect.Array;
+
 public enum ActionType {
     CREATE, UPDATE, DELETE, GET, GETALL;
 
