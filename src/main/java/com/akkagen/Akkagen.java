@@ -4,6 +4,7 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import com.akkagen.models.PathConstants;
 import com.akkagen.serviceproviders.engine.EngineStarter;
+import org.apache.log4j.BasicConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,6 +58,7 @@ public class Akkagen {
     }
 
     public static void main(String[] args) {
+        //BasicConfigurator.configure();
         int port = 9000;
         // The following order is important
         Akkagen.getInstance().initialize();

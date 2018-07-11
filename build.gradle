@@ -50,9 +50,8 @@ dependencies {
 
     // Logging support
     compile group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.25'
-    testCompile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
-    compile group: 'ch.qos.logback', name: 'logback-core', version: '1.2.3'
-    compile group: 'ch.qos.logback', name: 'logback-access', version: '1.2.3'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
 
     // Webapp support
    	compile group: 'org.glassfish.jersey.core', name: 'jersey-server', version: '2.7'
