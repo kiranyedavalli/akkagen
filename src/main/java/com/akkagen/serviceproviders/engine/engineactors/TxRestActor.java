@@ -24,7 +24,6 @@ public class TxRestActor extends EngineAbstractActor {
     protected void runEngine(AbstractEngineDefinition req) {
         this.txRestNBRequest = (TxRestEngineDefinition) req;
         //TODO: do the rest client
-        System.out.println("In TxRestActor " + getSelf() + ":: " + req.toString());
+        logger.debug("In TxRestActor " + getSelf() + ":: " + req.toString() + "with req: " + txRestNBRequest.getPrintOut());
     }
-
 }

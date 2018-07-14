@@ -1,7 +1,11 @@
 package com.akkagen.models;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class EngineInput {
 
+    private final Logger logger = LoggerFactory.getLogger(EngineInput.class);
     private String path;
     private ActionType action;
     private AbstractEngineDefinition abstractEngineDefinition;
@@ -36,5 +40,9 @@ public class EngineInput {
     public EngineInput setAbstractEngineDefinition(AbstractEngineDefinition abstractEngineDefinition) {
         this.abstractEngineDefinition = abstractEngineDefinition;
         return this;
+    }
+
+    public String getPrintOut(){
+        return String.format("path: %s\naction: %s\nEngineDefinition: %s", path, action.name(), abstractEngineDefinition);
     }
 }

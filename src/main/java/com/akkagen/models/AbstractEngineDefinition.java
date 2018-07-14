@@ -56,4 +56,9 @@ public abstract class AbstractEngineDefinition {
         this.periodicity = periodicity;
         return this;
     }
+
+    public String getPrintOut(){
+        return String.format("id: %s\nname: %s\ndescription: %s\ninstances: %d\nperiodicity: %d\n",
+                id, name, description, instances, periodicity);
+    }
 }

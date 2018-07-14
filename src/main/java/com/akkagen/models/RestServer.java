@@ -6,13 +6,15 @@ import com.akkagen.serviceproviders.management.ManagementServiceProvider;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 
 
 public class RestServer {
 
-    //TODO: Logger
+    private final Logger logger = LoggerFactory.getLogger(RestServer.class);
     private HashMap<String, String> serviceProviders = new HashMap<>();
     private ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
     private Server jettyServer;
@@ -31,6 +33,7 @@ public class RestServer {
         try {
             jettyServer.start();
             jettyServer.join();
+            logger.debug("Rest Server started!!!");
         }
         catch(Exception e) {
             throw new AkkagenException(e.getMessage(), AkkagenExceptionType.INTERAL_ERROR);
@@ -41,6 +44,7 @@ public class RestServer {
         try {
             jettyServer.stop();
             jettyServer.destroy();
+            logger.debug("Rest Server Stopped");
         }
         catch(Exception e){
             throw new AkkagenException(e.getMessage(), AkkagenExceptionType.INTERAL_ERROR);
@@ -50,6 +54,7 @@ public class RestServer {
     public void addServiceProvider(ManagementServiceProvider msp) {
         serviceProviders.put("jersey.config.server.provider.classnames", msp.getClass().getCanonicalName());
         jerseyServlet.setInitParameters(serviceProviders);
+        logger.debug("Added " + msp.getClass().getCanonicalName() + " to the servlets");
     }
 
     public String getPath(){

@@ -19,7 +19,6 @@ import java.util.function.Consumer;
 
 public abstract class ManagementServiceProvider {
 
-    //TODO: Logger
     private final Logger logger = LoggerFactory.getLogger(ManagementServiceProvider.class);
     private BiFunction<ActionType, AbstractEngineDefinition, Response> createNBInputBehavior = (t, r) -> {
         try {
@@ -43,10 +42,13 @@ public abstract class ManagementServiceProvider {
     protected Response handleAkkagenException(AkkagenException e){
         switch(e.getType()){
             case NOT_FOUND:
+                logger.debug(e.getMessage() + e.getType());
                 return Response.status(Response.Status.NOT_FOUND).build();
             case BAD_REQUEST:
+                logger.debug(e.getMessage() + e.getType());
                 return Response.status(Response.Status.BAD_REQUEST).build();
             default:
+                logger.debug(e.getMessage() + e.getType());
                 return Response.status(Response.Status.NOT_FOUND).build();
         }
     }
@@ -131,6 +133,7 @@ public abstract class ManagementServiceProvider {
 
     private void sendToDatapath(EngineInput req){
         Akkagen.getInstance().getRuntimeService().tell(req, ActorRef.noSender());
+        logger.debug("Sent to DataPath: " + req.getPrintOut());
     }
 
     private void store(AbstractEngineDefinition req, Consumer<AbstractEngineDefinition> storeBehavior) throws AkkagenException {

@@ -58,8 +58,8 @@ public class Akkagen {
     }
 
     public static void main(String[] args) {
-        //BasicConfigurator.configure();
         int port = 9000;
+
         // The following order is important
         Akkagen.getInstance().initialize();
         Akkagen.getInstance().getServiceProviderFactory().initializeRestServer(PathConstants.__BASE_PATH, port);
