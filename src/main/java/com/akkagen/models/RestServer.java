@@ -29,6 +29,16 @@ public class RestServer {
         jerseyServlet.setInitOrder(0);
     }
 
+    public void addProviderPackage(String servicePackage){
+        serviceProviders.put("jersey.config.server.provider.packages", servicePackage);
+        jerseyServlet.setInitParameters(serviceProviders);
+    }
+
+    public void addProviderClass(Class klass){
+        serviceProviders.put("jersey.config.server.provider.classnames", klass.getCanonicalName());
+        jerseyServlet.setInitParameters(serviceProviders);
+    }
+
     public void start(){
         try {
             jettyServer.start();
@@ -49,12 +59,6 @@ public class RestServer {
         catch(Exception e){
             throw new AkkagenException(e.getMessage(), AkkagenExceptionType.INTERAL_ERROR);
         }
-    }
-
-    public void addServiceProvider(ManagementServiceProvider msp) {
-        serviceProviders.put("jersey.config.server.provider.classnames", msp.getClass().getCanonicalName());
-        jerseyServlet.setInitParameters(serviceProviders);
-        logger.debug("Added " + msp.getClass().getCanonicalName() + " to the servlets");
     }
 
     public String getPath(){

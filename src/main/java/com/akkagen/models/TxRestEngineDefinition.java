@@ -69,9 +69,13 @@ public class TxRestEngineDefinition extends AbstractEngineDefinition {
 
     public String getPrintOut(){
         StringBuilder heads = new StringBuilder();
-        headers.forEach((k,v) -> heads.append(k + ":" + v));
+        if(headers!=null) {
+            headers.forEach((k, v) -> heads.append(k + ":" + v));
+        }
         StringBuilder queries = new StringBuilder();
-        queryParams.forEach((k,v) -> queries.append(k + ":" + v));
+        if(queryParams != null) {
+            queryParams.forEach((k,v) -> queries.append(k + ":" + v));
+        }
         return String.format("%surl: %s\nbody: %s\nmethod: %s\nheaders: %s\nqueryParams: %s", super.getPrintOut(),
                 url, body, method, heads, queries);
     }

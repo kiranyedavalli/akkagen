@@ -4,7 +4,6 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import com.akkagen.models.PathConstants;
 import com.akkagen.serviceproviders.engine.EngineStarter;
-import org.apache.log4j.BasicConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +16,7 @@ public class Akkagen {
     private static volatile Akkagen akkagen;
     private final Logger logger = LoggerFactory.getLogger(Akkagen.class);
     private ActorSystem system;
-    private ActorRef runtimeService;
+    private ActorRef engineStarter;
     private ServiceProviderFactory spFactory;
 
     private Akkagen() {
@@ -26,7 +25,7 @@ public class Akkagen {
 
     public void initialize(){
         this.system = ActorSystem.create("akkagen");
-        this.runtimeService = system.actorOf(EngineStarter.props(), "runtime-service");
+        this.engineStarter = system.actorOf(EngineStarter.props(), "runtime-service");
         this.spFactory = new ServiceProviderFactory();
     }
 
@@ -41,8 +40,8 @@ public class Akkagen {
         return akkagen;
     }
 
-    public ActorRef getRuntimeService() {
-        return this.runtimeService;
+    public ActorRef getEngineStarter() {
+        return this.engineStarter;
     }
 
     public ActorSystem getSystem() {
@@ -58,11 +57,12 @@ public class Akkagen {
     }
 
     public static void main(String[] args) {
-        int port = 9000;
+        final int mgmtPort = 9000;
+        final String mgmtServicePackage = "com.akkagen.serviceproviders.management.services";
 
         // The following order is important
         Akkagen.getInstance().initialize();
-        Akkagen.getInstance().getServiceProviderFactory().initializeRestServer(PathConstants.__BASE_PATH, port);
+        Akkagen.getInstance().getServiceProviderFactory().initializeMgmtRestServer(PathConstants.__BASE_PATH, mgmtPort, mgmtServicePackage);
         Akkagen.getInstance().getLogger().debug("service.Akkagen Started");
     }
 }

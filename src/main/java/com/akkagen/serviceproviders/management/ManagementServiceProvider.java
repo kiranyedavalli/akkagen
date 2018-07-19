@@ -20,23 +20,44 @@ import java.util.function.Consumer;
 public abstract class ManagementServiceProvider {
 
     private final Logger logger = LoggerFactory.getLogger(ManagementServiceProvider.class);
-    private BiFunction<ActionType, AbstractEngineDefinition, Response> createNBInputBehavior = (t, r) -> {
+    private BiFunction<ActionType, AbstractEngineDefinition, Response> createPostPutNBInputBehavior = (t, r) -> {
         try {
-            AbstractEngineDefinition req = handleRequest(new NBInput().setPath(this.getPath()).setAction(t).setAbstractEngineDefinition(r));
-            return Response.accepted().entity(req).build();
+            AbstractEngineDefinition res = handleMgmtRequest(new NBInput()
+                    .setPath(this.getPath())
+                    .setAction(t)
+                    .setAbstractEngineDefinition(r));
+            return Response.accepted().entity(res).build();
         } catch (AkkagenException e) {
             return handleAkkagenException(e);
         }
     };
 
-    private TriFunction<String, ActionType, AbstractEngineDefinition, EngineInput> createDRBehavior = (p, a, r) -> new EngineInput()
+    private BiFunction<ActionType, String, Response> createDeleteGetNBInputBehavior = (t, i) -> {
+        try {
+            AbstractEngineDefinition res = handleMgmtRequest(new NBInput()
+                    .setPath(getPath())
+                    .setAction(t)
+                    .addToQueryParams("id",i));
+            return (res == null) ? Response.accepted().entity("deleteId: "+i).build() : Response.ok().entity(res).build();
+        }
+        catch(AkkagenException e){
+            return handleAkkagenException(e);
+        }
+    };
+
+    private TriFunction<String, ActionType, AbstractEngineDefinition, EngineInput> createEngineInputBehavior = (p, a, r) -> new EngineInput()
             .setPath(p)
             .setAction(a)
             .setAbstractEngineDefinition(r);
 
-    protected Response processRequest(ActionType type, AbstractEngineDefinition req,
-                                    BiFunction<ActionType, AbstractEngineDefinition, Response> behavior) {
+    protected Response handlePostPutRequest(ActionType type, AbstractEngineDefinition req,
+                                            BiFunction<ActionType, AbstractEngineDefinition, Response> behavior) {
         return behavior.apply(type, req);
+    }
+
+    protected Response handleDeleteGetRequest(ActionType type, String id,
+                                              BiFunction<ActionType, String, Response> behavior) {
+        return behavior.apply(type, id);
     }
 
     protected Response handleAkkagenException(AkkagenException e){
@@ -62,11 +83,7 @@ public abstract class ManagementServiceProvider {
     */
 
     public abstract String getPath();
-
-    protected AbstractEngineDefinition validateAndGetEngineDefinition(AbstractEngineDefinition req) throws AkkagenException {
-        // If no implementation the req is valid
-        return req;
-    }
+    protected abstract AbstractEngineDefinition validateAndGetEngineDefinition(AbstractEngineDefinition req) throws AkkagenException;
 
     /*
     * public methods
@@ -74,11 +91,15 @@ public abstract class ManagementServiceProvider {
 
     public ManagementServiceProvider(){ }
 
-    public BiFunction<ActionType, AbstractEngineDefinition, Response> getCreateNBInputBehavior() {
-        return createNBInputBehavior;
+    public BiFunction<ActionType, AbstractEngineDefinition, Response> getCreatePostPutNBInputBehavior() {
+        return createPostPutNBInputBehavior;
     }
 
-    public AbstractEngineDefinition handleRequest(NBInput input) throws AkkagenException {
+    public BiFunction<ActionType, String, Response> getCreateDeleteGetNBInputBehavior() {
+        return createDeleteGetNBInputBehavior;
+    }
+
+    public AbstractEngineDefinition handleMgmtRequest(NBInput input) throws AkkagenException {
 
         // Validate the input and send it to datapath
         AbstractEngineDefinition req = null;
@@ -92,7 +113,7 @@ public abstract class ManagementServiceProvider {
                 }
                 logger.debug("req: " + req.toString());
                 store(validateAndGetEngineDefinition(req), r -> getStorage().createEngineDefition(r));
-                sendToDatapath(createDatapathRequest(input.getPath(), actionType, req, createDRBehavior));
+                sendToEngine(createEngineInput(input.getPath(), actionType, req, createEngineInputBehavior));
                 return req;
             case UPDATE:
                 req = input.getAbstractEngineDefinition();
@@ -101,14 +122,14 @@ public abstract class ManagementServiceProvider {
                 }
                 logger.debug("req: " + req.toString());
                 store(validateAndGetEngineDefinition(req), r -> getStorage().updateEngineDefinition(r));
-                sendToDatapath(createDatapathRequest(input.getPath(), actionType, req, createDRBehavior));
+                sendToEngine(createEngineInput(input.getPath(), actionType, req, createEngineInputBehavior));
                 return req;
             case DELETE:
                 id = input.getQueryParams().get("id");
                 if(StringUtils.isBlank(id)){
                     throw new AkkagenException("The id is blank", AkkagenExceptionType.BAD_REQUEST);
                 }
-                sendToDatapath(createDatapathRequest(input.getPath(), actionType, getStorage().getEngineDefinitionById(id), createDRBehavior));
+                sendToEngine(createEngineInput(input.getPath(), actionType, getStorage().getEngineDefinitionById(id), createEngineInputBehavior));
                 // TODO: Need to get a confirmation that delete is successful before we delete it from storage.
                 getStorage().deleteEngineDefinitionById(id);
                 return null;
@@ -126,13 +147,13 @@ public abstract class ManagementServiceProvider {
 
     }
 
-    private EngineInput createDatapathRequest(String path, ActionType action, AbstractEngineDefinition req,
-                                              TriFunction<String, ActionType, AbstractEngineDefinition, EngineInput> behavior){
+    private EngineInput createEngineInput(String path, ActionType action, AbstractEngineDefinition req,
+                                          TriFunction<String, ActionType, AbstractEngineDefinition, EngineInput> behavior){
         return behavior.apply(path, action, req);
     }
 
-    private void sendToDatapath(EngineInput req){
-        Akkagen.getInstance().getRuntimeService().tell(req, ActorRef.noSender());
+    private void sendToEngine(EngineInput req){
+        Akkagen.getInstance().getEngineStarter().tell(req, ActorRef.noSender());
         logger.debug("Sent to DataPath: " + req.getPrintOut());
     }
 

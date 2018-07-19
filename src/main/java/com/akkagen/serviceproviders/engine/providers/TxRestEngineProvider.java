@@ -1,4 +1,4 @@
-package com.akkagen.serviceproviders.engine;
+package com.akkagen.serviceproviders.engine.providers;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -6,9 +6,10 @@ import akka.actor.Props;
 import com.akkagen.exceptions.AkkagenException;
 import com.akkagen.exceptions.AkkagenExceptionType;
 import com.akkagen.models.AbstractEngineDefinition;
+import com.akkagen.serviceproviders.engine.providers.actors.TxRestActor;
+import com.akkagen.serviceproviders.engine.providers.messages.RunMessage;
+import com.akkagen.serviceproviders.engine.providers.messages.StopMessage;
 import com.akkagen.utils.TriConsumer;
-import com.akkagen.serviceproviders.engine.engineactors.messages.RunMessage;
-import com.akkagen.serviceproviders.engine.engineactors.messages.StopMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,18 +17,17 @@ import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
-public class EngineProvider {
+public class TxRestEngineProvider extends AbstractEngineProvider {
 
-    private Logger logger = LoggerFactory.getLogger(EngineProvider.class);
+    private Logger logger = LoggerFactory.getLogger(TxRestEngineProvider.class);
     private ConcurrentHashMap<String, ArrayList<ActorRef>> actorMap = new ConcurrentHashMap<>();
-    private ActorSystem system;
-    private Props props;
-    private String path;
 
-    public EngineProvider(ActorSystem system, Props props, String path){
-        this.system = system;
-        this.props = props;
-        this.path = path;
+    public static Props props(ActorSystem system, String path){
+        return Props.create(TxRestEngineProvider.class, () -> new TxRestEngineProvider(system, path));
+    }
+
+    private TxRestEngineProvider(ActorSystem system, String path){
+        super(system, path);
     }
 
     private void addActorList(String id, ArrayList<ActorRef> list) {
@@ -54,40 +54,35 @@ public class EngineProvider {
         runBehavior.accept(req, id, actorList);
     }
 
-    private ActorSystem getSystem(){
-        return this.system;
-    }
+    private TriConsumer<AbstractEngineDefinition, String, ArrayList<ActorRef>> runBehavior =
+            (r, i, l) -> l.forEach(actor -> actor.tell(new RunMessage(r), ActorRef.noSender()));
 
-    private Props getProps() {
-        return this.props;
-    }
+    private TriConsumer<AbstractEngineDefinition, String, ArrayList<ActorRef>> stopBehavior =
+            (r, i, l) -> l.forEach(actor -> actor.tell(new StopMessage(i), ActorRef.noSender()));
 
-    public String getPath() {
-        return this.path;
-    }
 
-    public void createEngines(AbstractEngineDefinition req) {
+    @Override
+    public void createEngine(AbstractEngineDefinition req) {
         ArrayList<ActorRef> actorList = new ArrayList<>();
         IntStream.range(0,req.getInstances()).forEach(i -> {
-            ActorRef actor = getSystem().actorOf(getProps(), getPath()+i);
+            ActorRef actor = getSystem().actorOf(TxRestActor.props(), getPath() + "-" + i);
             actorList.add(actor);
-            addActorList(req.getId(), actorList);
         });
-        runActors(req, req.getId(), getActorList(req.getId()),
-                (r, i, l) -> l.forEach(actor -> actor.tell(new RunMessage(r), ActorRef.noSender())));
+        addActorList(req.getId(), actorList);
+        runActors(req, req.getId(), getActorList(req.getId()), runBehavior);
         logger.debug("Created Engines for id: " + req.getId());
     }
 
-    public void updateEngines(AbstractEngineDefinition req) {
-        runActors(req, req.getId(), getActorList(req.getId()),
-                (r, i, l) -> l.forEach(actor -> actor.tell(new RunMessage(r), ActorRef.noSender())));
+    @Override
+    public void updateEngine(AbstractEngineDefinition req) {
+        runActors(req, req.getId(), getActorList(req.getId()), runBehavior);
         logger.debug("Updated Engines for id: " + req.getId());
     }
 
-    public void deleteEngines(String id) {
-        runActors(null, id, getActorList(id),
-                (r, i, l) -> l.forEach(actor -> actor.tell(new StopMessage(i), ActorRef.noSender())));
-        deleteActorList(id);
-        logger.debug("Deleted Engines for id: " + id);
+    @Override
+    public void deleteEngine(AbstractEngineDefinition req) {
+        runActors(req, req.getId(), getActorList(req.getId()), stopBehavior);
+        deleteActorList(req.getId());
+        logger.debug("Deleted Engines for id: " + req.getId());
     }
 }

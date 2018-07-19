@@ -1,4 +1,4 @@
-package com.akkagen.serviceproviders.engine.engineactors;
+package com.akkagen.serviceproviders.engine.providers.actors;
 
 import akka.actor.ActorSystem;
 import akka.actor.Props;
@@ -12,13 +12,11 @@ public class TxRestActor extends EngineAbstractActor {
     private final Logger logger = LoggerFactory.getLogger(TxRestActor.class);
     private TxRestEngineDefinition txRestNBRequest;
 
-    public static Props props(ActorSystem system){
-        return Props.create(TxRestActor.class, () -> new TxRestActor(system));
+    public static Props props(){
+        return Props.create(TxRestActor.class, () -> new TxRestActor());
     }
 
-    private TxRestActor(ActorSystem sys) {
-        super(sys);
-    }
+    private TxRestActor(){}
 
     @Override
     protected void runEngine(AbstractEngineDefinition req) {

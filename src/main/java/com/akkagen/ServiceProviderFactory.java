@@ -1,15 +1,20 @@
 package com.akkagen;
 
 
+import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import com.akkagen.exceptions.AkkagenException;
 import com.akkagen.models.PathConstants;
+import com.akkagen.models.RxRestEngineDefinition;
+import com.akkagen.serviceproviders.engine.providers.EngineRestServer;
+import com.akkagen.serviceproviders.engine.providers.RxRestEngineProvider;
+import com.akkagen.serviceproviders.engine.providers.TxRestEngineProvider;
 import com.akkagen.serviceproviders.management.ManagementServiceProvider;
 import com.akkagen.serviceproviders.management.ManagementServiceProviderStorage;
 import com.akkagen.models.RestServer;
-import com.akkagen.serviceproviders.engine.EngineProvider;
+import com.akkagen.serviceproviders.engine.providers.AbstractEngineProvider;
 import com.akkagen.serviceproviders.management.services.TxRestService;
-import com.akkagen.serviceproviders.engine.engineactors.TxRestActor;
+import com.akkagen.serviceproviders.engine.providers.actors.TxRestActor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,25 +22,34 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ServiceProviderFactory {
 
-    private Logger logger = LoggerFactory.getLogger(ServiceProviderFactory.class);
+    private final Logger logger = LoggerFactory.getLogger(ServiceProviderFactory.class);
+    private EngineRestServer engineRestServer;
+    ActorSystem system = Akkagen.getInstance().getSystem();
 
     // Management Storage
     private ConcurrentHashMap<String, ManagementServiceProviderStorage> managementServiceProviderStorageMap = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, ManagementServiceProvider> managementServiceProviderMap = new ConcurrentHashMap<>();
 
     // Runtime Storage
-    private ConcurrentHashMap<String, EngineProvider> runtimeServiceProviderMap = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, ActorRef> engineProviderMap = new ConcurrentHashMap<>();
 
-    public void initializeRestServer(String basePath, int port){
+    public void initializeMgmtRestServer(String basePath, int port, String servicePackage){
         RestServer mgmtRestServer = new RestServer(basePath, port);
-        managementServiceProviderMap.keySet().forEach(sp -> mgmtRestServer.addServiceProvider(managementServiceProviderMap.get(sp)));
+        mgmtRestServer.addProviderPackage(servicePackage);
         mgmtRestServer.start();
         logger.debug("Management Rest Server Started");
     }
 
     public ServiceProviderFactory(){
         initializeManagementServiceProviders();
-        initializeRuntimeServiceProviders();
+        initializeEngineProviders();
+
+        //TODO: Move this to the time when the RxRest server is defined
+        initializeEngineRestServer();
+    }
+
+    private void initializeEngineRestServer(){
+        engineRestServer = new EngineRestServer(system);
     }
 
     // Management Service Providers - add a new Management service provide here
@@ -66,23 +80,24 @@ public class ServiceProviderFactory {
 
     // Runtime Service Providers
 
-    private void initializeRuntimeServiceProviders(){
-        ActorSystem system = Akkagen.getInstance().getSystem();
-        addRuntimeServiceProvider(new EngineProvider(system, TxRestActor.props(system), PathConstants.__TX_REST));
+    private void initializeEngineProviders(){
+        addEngineProvider(system.actorOf(TxRestEngineProvider.props(system, PathConstants.__TX_REST)), PathConstants.__TX_REST);
+        addEngineProvider(system.actorOf(RxRestEngineProvider.props(system, PathConstants.__RX_REST)), PathConstants.__RX_REST);
         // Add more in future
     }
 
-    private void addRuntimeServiceProvider(EngineProvider sp) throws AkkagenException {
-        if(runtimeServiceProviderMap.keySet().contains(sp.getPath())){
-            throw new AkkagenException("The Service provider with prefix " + sp.getPath() + " already exists!!!");
+    private void addEngineProvider(ActorRef sp, String path) throws AkkagenException {
+        if(engineProviderMap.keySet().contains(path)){
+            throw new AkkagenException("The Service provider with prefix " + path + " already exists!!!");
         }
 
-        runtimeServiceProviderMap.put(sp.getPath(), sp);
-        logger.debug("Added " + sp.toString() + " to the Runtime Service Provider Map");
+        engineProviderMap.put(path, sp);
+        logger.debug("Added " + sp.path() + " to the Runtime Service Provider Map");
     }
 
-    public EngineProvider getRuntimeServiceProvider(String path){
-        return runtimeServiceProviderMap.getOrDefault(path, null);
+    public ActorRef getEngineProvider(String path){
+        return engineProviderMap.getOrDefault(path, null);
     }
 
+    public EngineRestServer getEngineRestServer() { return engineRestServer; }
 }
