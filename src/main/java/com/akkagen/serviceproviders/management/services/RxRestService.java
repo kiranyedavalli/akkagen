@@ -9,6 +9,8 @@ import com.akkagen.serviceproviders.management.ManagementServiceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.akkagen.utils.utils.getObjectFromJsonString;
+
 public class RxRestService extends ManagementServiceProvider {
 
     private final Logger logger = LoggerFactory.getLogger(RxRestService.class);

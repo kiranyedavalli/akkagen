@@ -179,9 +179,4 @@ public abstract class ManagementServiceProvider {
     */
 
     public ManagementServiceProvider(){}
-
-    //Utils
-    public static Object getObjectFromJsonString(String json, Class klass){
-        return new Gson().fromJson(json, klass);
-    }
 }
