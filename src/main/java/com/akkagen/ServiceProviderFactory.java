@@ -5,18 +5,14 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import com.akkagen.exceptions.AkkagenException;
 import com.akkagen.models.PathConstants;
-import com.akkagen.models.RxRestEngineDefinition;
 import com.akkagen.serviceproviders.engine.providers.EngineRestServer;
 import com.akkagen.serviceproviders.engine.providers.RxRestEngineProvider;
 import com.akkagen.serviceproviders.engine.providers.TxRestEngineProvider;
 import com.akkagen.serviceproviders.management.ManagementRestServer;
 import com.akkagen.serviceproviders.management.ManagementServiceProvider;
 import com.akkagen.serviceproviders.management.ManagementServiceProviderStorage;
-import com.akkagen.models.RestServer;
-import com.akkagen.serviceproviders.engine.providers.AbstractEngineProvider;
 import com.akkagen.serviceproviders.management.services.RxRestService;
 import com.akkagen.serviceproviders.management.services.TxRestService;
-import com.akkagen.serviceproviders.engine.providers.actors.TxRestActor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
