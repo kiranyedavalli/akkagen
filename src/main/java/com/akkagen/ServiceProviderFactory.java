@@ -9,10 +9,12 @@ import com.akkagen.models.RxRestEngineDefinition;
 import com.akkagen.serviceproviders.engine.providers.EngineRestServer;
 import com.akkagen.serviceproviders.engine.providers.RxRestEngineProvider;
 import com.akkagen.serviceproviders.engine.providers.TxRestEngineProvider;
+import com.akkagen.serviceproviders.management.ManagementRestServer;
 import com.akkagen.serviceproviders.management.ManagementServiceProvider;
 import com.akkagen.serviceproviders.management.ManagementServiceProviderStorage;
 import com.akkagen.models.RestServer;
 import com.akkagen.serviceproviders.engine.providers.AbstractEngineProvider;
+import com.akkagen.serviceproviders.management.services.RxRestService;
 import com.akkagen.serviceproviders.management.services.TxRestService;
 import com.akkagen.serviceproviders.engine.providers.actors.TxRestActor;
 import org.slf4j.Logger;
@@ -23,8 +25,19 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ServiceProviderFactory {
 
     private final Logger logger = LoggerFactory.getLogger(ServiceProviderFactory.class);
-    private EngineRestServer engineRestServer;
-    ActorSystem system = Akkagen.getInstance().getSystem();
+    private EngineRestServer engineRestServer = null;
+    private ManagementRestServer mgmtRestServer = null;
+    private ActorSystem system;
+    private final String host = "localhost";
+
+    // Mgmt Rest Server
+    private final String mgmtBasepath = PathConstants.__BASE_PATH;
+    private final int mgmtPort = 9000;
+    private final String mgmtServicePackage = "com.akkagen.serviceproviders.management.services";
+
+    // Engine Rest Server
+    private final int enginePort = 33777;
+
 
     // Management Storage
     private ConcurrentHashMap<String, ManagementServiceProviderStorage> managementServiceProviderStorageMap = new ConcurrentHashMap<>();
@@ -33,29 +46,26 @@ public class ServiceProviderFactory {
     // Runtime Storage
     private ConcurrentHashMap<String, ActorRef> engineProviderMap = new ConcurrentHashMap<>();
 
-    public void initializeMgmtRestServer(String basePath, int port, String servicePackage){
-        RestServer mgmtRestServer = new RestServer(basePath, port);
-        mgmtRestServer.addProviderPackage(servicePackage);
-        mgmtRestServer.start();
+    public void initializeMgmtRestServer(){
+        /*RestServer mgmtRestServer = new RestServer(mgmtBasepath, mgmtPort);
+        mgmtRestServer.addProviderPackage(mgmtServicePackage);
+        mgmtRestServer.start();*/
+        mgmtRestServer = new ManagementRestServer(system, host, mgmtPort);
         logger.debug("Management Rest Server Started");
     }
 
-    public ServiceProviderFactory(){
-        initializeManagementServiceProviders();
-        initializeEngineProviders();
-
-        //TODO: Move this to the time when the RxRest server is defined
-        initializeEngineRestServer();
-    }
-
-    private void initializeEngineRestServer(){
-        engineRestServer = new EngineRestServer(system);
+    public ServiceProviderFactory(ActorSystem system){
+        this.system = system;
     }
 
     // Management Service Providers - add a new Management service provide here
-    private void initializeManagementServiceProviders(){
-        addManagementServiceProvider(new TxRestService());
+    public ManagementRestServer getManagementRestServer(){
+        return mgmtRestServer;
+    }
 
+    public void initializeManagementServiceProviders(){
+        addManagementServiceProvider(new TxRestService());
+        addManagementServiceProvider(new RxRestService());
         // Add more in future
     }
 
@@ -80,7 +90,8 @@ public class ServiceProviderFactory {
 
     // Runtime Service Providers
 
-    private void initializeEngineProviders(){
+    public void initializeEngineProviders(){
+        logger.debug("Created new engineRestServer");
         addEngineProvider(system.actorOf(TxRestEngineProvider.props(system, PathConstants.__TX_REST)), PathConstants.__TX_REST);
         addEngineProvider(system.actorOf(RxRestEngineProvider.props(system, PathConstants.__RX_REST)), PathConstants.__RX_REST);
         // Add more in future
@@ -88,16 +99,21 @@ public class ServiceProviderFactory {
 
     private void addEngineProvider(ActorRef sp, String path) throws AkkagenException {
         if(engineProviderMap.keySet().contains(path)){
-            throw new AkkagenException("The Service provider with prefix " + path + " already exists!!!");
+            throw new AkkagenException("The Engine provider with prefix " + path + " already exists!!!");
         }
 
         engineProviderMap.put(path, sp);
-        logger.debug("Added " + sp.path() + " to the Runtime Service Provider Map");
+        logger.debug("Added " + sp.toString() + " to the Engine Provider Map");
     }
 
     public ActorRef getEngineProvider(String path){
         return engineProviderMap.getOrDefault(path, null);
     }
 
-    public EngineRestServer getEngineRestServer() { return engineRestServer; }
+    public EngineRestServer getEngineRestServer() {
+        if(engineRestServer == null){
+            engineRestServer = new EngineRestServer(system, host, enginePort);
+        }
+        return engineRestServer;
+    }
 }

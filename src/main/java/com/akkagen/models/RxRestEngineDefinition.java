@@ -71,7 +71,7 @@ public class RxRestEngineDefinition extends AbstractEngineDefinition {
         if(def.getUri().equals(this.uri) &&
                 def.getMethod().equals(this.method) &&
                 def.getRequestBody().equals(this.requestBody) &&
-                def.getHeaders().equals(this.headers)){
+                def.getHeaders().entrySet().containsAll(this.headers.entrySet())){
             return true;
         }
         return false;

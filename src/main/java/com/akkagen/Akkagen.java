@@ -25,8 +25,8 @@ public class Akkagen {
 
     public void initialize(){
         this.system = ActorSystem.create("akkagen");
-        this.engineStarter = system.actorOf(EngineStarter.props(), "runtime-service");
-        this.spFactory = new ServiceProviderFactory();
+        this.engineStarter = system.actorOf(EngineStarter.props(), "engine-starter");
+        this.spFactory = new ServiceProviderFactory(system);
     }
 
     public static Akkagen getInstance(){
@@ -57,12 +57,11 @@ public class Akkagen {
     }
 
     public static void main(String[] args) {
-        final int mgmtPort = 9000;
-        final String mgmtServicePackage = "com.akkagen.serviceproviders.management.services";
-
         // The following order is important
         Akkagen.getInstance().initialize();
-        Akkagen.getInstance().getServiceProviderFactory().initializeMgmtRestServer(PathConstants.__BASE_PATH, mgmtPort, mgmtServicePackage);
-        Akkagen.getInstance().getLogger().debug("service.Akkagen Started");
+        Akkagen.getInstance().getServiceProviderFactory().initializeMgmtRestServer();
+        Akkagen.getInstance().getServiceProviderFactory().initializeManagementServiceProviders();
+        Akkagen.getInstance().getServiceProviderFactory().initializeEngineProviders();
+        Akkagen.getInstance().getLogger().debug("***** Akkagen Started *****");
     }
 }
