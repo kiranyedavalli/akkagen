@@ -3,7 +3,6 @@ package com.akkagen.serviceproviders.engine.providers;
 
 import akka.actor.ActorSystem;
 import akka.http.javadsl.model.HttpRequest;
-import akka.http.javadsl.model.HttpResponse;
 import akka.http.javadsl.model.StatusCodes;
 import akka.http.javadsl.server.Route;
 import com.akkagen.exceptions.AkkagenException;
@@ -17,9 +16,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class EngineRestServer extends AbstractAkkaRestServer {
+public class RxRestEngineServer extends AbstractAkkaRestServer {
 
-    private final Logger logger = LoggerFactory.getLogger(EngineRestServer.class);
+    private final Logger logger = LoggerFactory.getLogger(RxRestEngineServer.class);
     private ConcurrentHashMap<String, RxRestEngineDefinition> rxRestEngines = new ConcurrentHashMap<>();
     private ConcurrentHashMap<String, Long> rxRestEnginesCount = new ConcurrentHashMap<>();
 
@@ -55,7 +54,7 @@ public class EngineRestServer extends AbstractAkkaRestServer {
         return rex;
     }
 
-    public EngineRestServer(ActorSystem system, String host, int port){
+    public RxRestEngineServer(ActorSystem system, String host, int port){
         super(system, host, port);
     }
 

@@ -2,11 +2,11 @@ package com.akkagen.models;
 
 import java.util.HashMap;
 
-public class NBInput {
+public class NBInput<T extends AbstractEngineDefinition> {
 
     private String path;
     private ActionType action;
-    private AbstractEngineDefinition abstractEngineDefinition;
+    private T engineDefinition;
 
     private HashMap<String, String> headers = new HashMap<>();
     private HashMap<String, String> queryParams = new HashMap<>();
@@ -22,8 +22,8 @@ public class NBInput {
         return path;
     }
 
-    public AbstractEngineDefinition getAbstractEngineDefinition() {
-        return abstractEngineDefinition;
+    public T getEngineDefinition() {
+        return engineDefinition;
     }
 
     public HashMap<String, String> getHeaders() {
@@ -34,27 +34,27 @@ public class NBInput {
         return queryParams;
     }
 
-    public NBInput setAction(ActionType action) {
+    public NBInput<T> setAction(ActionType action) {
         this.action = action;
         return this;
     }
 
-    public NBInput setPath(String path) {
+    public NBInput<T> setPath(String path) {
         this.path = path;
         return this;
     }
 
-    public NBInput setAbstractEngineDefinition(AbstractEngineDefinition body) {
-        this.abstractEngineDefinition = body;
+    public NBInput<T> setEngineDefinition(T body) {
+        this.engineDefinition = body;
         return this;
     }
 
-    public NBInput addToHeaders(String key, String value) {
+    public NBInput<T> addToHeaders(String key, String value) {
         this.headers.put(key, value);
         return this;
     }
 
-    public NBInput addToQueryParams(String key, String value) {
+    public NBInput<T> addToQueryParams(String key, String value) {
         this.queryParams.put(key, value);
         return this;
     }

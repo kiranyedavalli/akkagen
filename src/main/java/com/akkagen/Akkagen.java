@@ -2,8 +2,6 @@ package com.akkagen;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import com.akkagen.models.PathConstants;
-import com.akkagen.serviceproviders.engine.EngineStarter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +14,6 @@ public class Akkagen {
     private static volatile Akkagen akkagen;
     private final Logger logger = LoggerFactory.getLogger(Akkagen.class);
     private ActorSystem system;
-    private ActorRef engineStarter;
     private ServiceProviderFactory spFactory;
 
     private Akkagen() {
@@ -25,7 +22,6 @@ public class Akkagen {
 
     public void initialize(){
         this.system = ActorSystem.create("akkagen");
-        this.engineStarter = system.actorOf(EngineStarter.props(), "engine-starter");
         this.spFactory = new ServiceProviderFactory(system);
     }
 
@@ -38,10 +34,6 @@ public class Akkagen {
             }
         }
         return akkagen;
-    }
-
-    public ActorRef getEngineStarter() {
-        return this.engineStarter;
     }
 
     public ActorSystem getSystem() {

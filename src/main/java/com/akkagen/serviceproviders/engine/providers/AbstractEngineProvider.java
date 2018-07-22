@@ -2,13 +2,13 @@ package com.akkagen.serviceproviders.engine.providers;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorSystem;
-import akka.actor.Props;
+import com.akkagen.exceptions.AkkagenException;
 import com.akkagen.models.AbstractEngineDefinition;
-import com.akkagen.serviceproviders.engine.providers.messages.AbstractEngineMessage;
+import com.akkagen.models.EngineInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class AbstractEngineProvider extends AbstractActor {
+public abstract class AbstractEngineProvider<T extends AbstractEngineDefinition> extends AbstractActor {
 
     private Logger logger = LoggerFactory.getLogger(AbstractEngineProvider.class);
 
@@ -32,12 +32,27 @@ public abstract class AbstractEngineProvider extends AbstractActor {
     protected abstract void updateEngine(AbstractEngineDefinition def);
     protected abstract void deleteEngine(AbstractEngineDefinition def);
 
+    public void processInput(EngineInput input){
+        switch(input.getAction()){
+            case CREATE:
+                createEngine(input.getEngineDefinition());
+                break;
+            case UPDATE:
+                updateEngine(input.getEngineDefinition());
+                break;
+            case DELETE:
+                deleteEngine(input.getEngineDefinition());
+                break;
+            default:
+                throw new AkkagenException("Unknown actiontype");
+        }
+    }
+
     @Override
     public Receive createReceive() {
         return receiveBuilder()
-                .match(AbstractEngineMessage.CreateEngine.class, e -> createEngine(e.getDef()))
-                .match(AbstractEngineMessage.UpdateEngine.class, e -> updateEngine(e.getDef()))
-                .match(AbstractEngineMessage.DeleteEngine.class, e -> deleteEngine(e.getDef()))
+                .match(EngineInput.class, this::processInput)
+                .matchAny(o -> logger.info("%s:: received unknown message",getSelf().toString()))
                 .build();
     }
 }

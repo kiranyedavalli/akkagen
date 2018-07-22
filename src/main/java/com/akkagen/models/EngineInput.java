@@ -3,12 +3,12 @@ package com.akkagen.models;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class EngineInput {
+public class EngineInput<T extends AbstractEngineDefinition> {
 
     private final Logger logger = LoggerFactory.getLogger(EngineInput.class);
     private String path;
     private ActionType action;
-    private AbstractEngineDefinition abstractEngineDefinition;
+    private T engineDefinition;
 
     public EngineInput(){
 
@@ -22,27 +22,27 @@ public class EngineInput {
         return action;
     }
 
-    public AbstractEngineDefinition getAbstractEngineDefinition() {
-        return abstractEngineDefinition;
+    public T getEngineDefinition() {
+        return engineDefinition;
     }
 
 
-    public EngineInput setPath(String path) {
+    public EngineInput<T> setPath(String path) {
         this.path = path;
         return this;
     }
 
-    public EngineInput setAction(ActionType action) {
+    public EngineInput<T> setAction(ActionType action) {
         this.action = action;
         return this;
     }
 
-    public EngineInput setAbstractEngineDefinition(AbstractEngineDefinition abstractEngineDefinition) {
-        this.abstractEngineDefinition = abstractEngineDefinition;
+    public EngineInput<T> setEngineDefinition(T engineDefinition) {
+        this.engineDefinition = engineDefinition;
         return this;
     }
 
     public String getPrintOut(){
-        return String.format("path: %s\naction: %s\nEngineDefinition: %s", path, action.name(), abstractEngineDefinition);
+        return String.format("path: %s\naction: %s\nEngineDefinition: %s", path, action.name(), engineDefinition);
     }
 }

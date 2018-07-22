@@ -10,25 +10,30 @@ import com.akkagen.exceptions.AkkagenException;
 import com.akkagen.exceptions.AkkagenExceptionType;
 import com.akkagen.models.*;
 import com.akkagen.utils.TriFunction;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.core.Response;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import static akka.http.javadsl.server.Directives.complete;
+import static com.akkagen.utils.utils.getObjectFromJson;
 
-public abstract class ManagementServiceProvider {
+public class ManagementServiceProvider<T extends AbstractEngineDefinition> {
 
     private final Logger logger = LoggerFactory.getLogger(ManagementServiceProvider.class);
-    private BiFunction<ActionType, AbstractEngineDefinition, Route> createPostPutNBInputBehavior = (t, r) -> {
+    private Class<T> klass;
+    private String path;
+    private Predicate<T> inputValidator;
+    private ManagementServiceProviderStorage<T> storage;
+    private BiFunction<ActionType, T, Route> createPostPutNBInputBehavior = (t, r) -> {
             try{
-                AbstractEngineDefinition def = handleMgmtRequest(new NBInput().setPath(this.getPath()).setAction(t).setAbstractEngineDefinition(r));
+                NBInput<T> nbInput = new NBInput().setPath(this.getPath()).setAction(t).setEngineDefinition(r);
+                T def = handleMgmtRequest(nbInput);
                 if(def == null){
                     return complete(StatusCodes.INTERNAL_SERVER_ERROR, def, Jackson.marshaller());
                 }
@@ -41,9 +46,14 @@ public abstract class ManagementServiceProvider {
 
     private BiFunction<ActionType, String, Route> createDeleteGetNBInputBehavior = (t, i) -> {
         try{
-           AbstractEngineDefinition def = handleMgmtRequest(new NBInput().setPath(getPath()).setAction(t).addToQueryParams("id",i));
-           if(t.equals(ActionType.GET) && def == null){
-               return complete(StatusCodes.NOT_FOUND, i, Jackson.marshaller());
+            NBInput<T> nbInput = new NBInput().setPath(this.getPath()).setAction(t).addToQueryParams("id",i);
+           T def = handleMgmtRequest(nbInput);
+           if(t.equals(ActionType.GET)) {
+               if (def == null) {
+                   return complete(StatusCodes.NOT_FOUND, i, Jackson.marshaller());
+               } else {
+                   return complete(StatusCodes.OK, def, Jackson.marshaller());
+               }
            }
            return complete(StatusCodes.ACCEPTED, i, Jackson.marshaller());
         }
@@ -54,12 +64,12 @@ public abstract class ManagementServiceProvider {
 
     // Private methods
 
-    private ManagementServiceProviderStorage getStorage(){
-        return Akkagen.getInstance().getServiceProviderFactory().getManagementServiceProviderStorage(this.getPath());
+    private ManagementServiceProviderStorage<T> getStorage(){
+        return storage;
     }
 
-    private TriFunction<String, ActionType, AbstractEngineDefinition, EngineInput> createEngineInputBehavior = (p, a, r) ->
-            new EngineInput().setPath(p).setAction(a).setAbstractEngineDefinition(r);
+    private TriFunction<String, ActionType, T, EngineInput> createEngineInputBehavior = (p, a, r) ->
+            new EngineInput().setPath(p).setAction(a).setEngineDefinition(r);
 
     private Route handleAkkagenException(AkkagenException e){
         switch(e.getType()){
@@ -73,29 +83,25 @@ public abstract class ManagementServiceProvider {
         }
     }
 
-    private AbstractEngineDefinition handleMgmtRequest(NBInput input) throws AkkagenException {
+    private T handleMgmtRequest(NBInput<T> input) throws AkkagenException {
 
         // Validate the input and send it to datapath
-        AbstractEngineDefinition req = null;
+        T req = null;
         ActionType actionType = input.getAction();
         String id = null;
         switch (actionType) {
             case CREATE:
-                req = input.getAbstractEngineDefinition();
-                if(req == null){
-                    throw new AkkagenException("The request object is empty", AkkagenExceptionType.BAD_REQUEST);
-                }
-                logger.debug("req: " + req.toString());
-                store(validateAndGetEngineDefinition(req), r -> getStorage().createEngineDefition(r));
-                sendToEngine(createEngineInput(input.getPath(), actionType, req, createEngineInputBehavior));
-                return req;
             case UPDATE:
-                req = input.getAbstractEngineDefinition();
+                req = input.getEngineDefinition();
                 if(req == null){
                     throw new AkkagenException("The request object is empty", AkkagenExceptionType.BAD_REQUEST);
                 }
-                logger.debug("req: " + req.toString());
-                store(validateAndGetEngineDefinition(req), r -> getStorage().updateEngineDefinition(r));
+                logger.debug("Received " + actionType + " for req: " + req.getPrintOut());
+                if(!inputValidator.test(req)){
+                    logger.debug("invalid input");
+                    throw new AkkagenException("Input invalid", AkkagenExceptionType.BAD_REQUEST);
+                }
+                store(req, r -> getStorage().createEngineDefition(r));
                 sendToEngine(createEngineInput(input.getPath(), actionType, req, createEngineInputBehavior));
                 return req;
             case DELETE:
@@ -103,6 +109,7 @@ public abstract class ManagementServiceProvider {
                 if(StringUtils.isBlank(id)){
                     throw new AkkagenException("The id is blank", AkkagenExceptionType.BAD_REQUEST);
                 }
+                logger.debug("Received " + actionType + " for id: " + id);
                 sendToEngine(createEngineInput(input.getPath(), actionType, getStorage().getEngineDefinitionById(id), createEngineInputBehavior));
                 // TODO: Need to get a confirmation that delete is successful before we delete it from storage.
                 getStorage().deleteEngineDefinitionById(id);
@@ -112,6 +119,7 @@ public abstract class ManagementServiceProvider {
                 if(StringUtils.isBlank(id)){
                     throw new AkkagenException("The id is blank", AkkagenExceptionType.BAD_REQUEST);
                 }
+                logger.debug("Received " + actionType + " for id: " + id);
                 return getStorage().getEngineDefinitionById(id);
             case GETALL:
                 //TODO
@@ -121,62 +129,76 @@ public abstract class ManagementServiceProvider {
 
     }
 
-    private EngineInput createEngineInput(String path, ActionType action, AbstractEngineDefinition req,
-                                          TriFunction<String, ActionType, AbstractEngineDefinition, EngineInput> behavior){
+    private EngineInput createEngineInput(String path, ActionType action, T req,
+                                          TriFunction<String, ActionType, T, EngineInput> behavior){
         return behavior.apply(path, action, req);
     }
 
     private void sendToEngine(EngineInput req){
-        Akkagen.getInstance().getEngineStarter().tell(req, ActorRef.noSender());
-        logger.debug("Sent to DataPath: " + req.getPrintOut());
+        ActorRef esp = Akkagen.getInstance().getServiceProviderFactory().getEngineProvider(getPath());
+        esp.tell(req, ActorRef.noSender());
+        logger.debug("Sent \n" + req.getPrintOut() + " \n to Engine Provider: " + esp.toString());
     }
 
-    private void store(AbstractEngineDefinition req, Consumer<AbstractEngineDefinition> storeBehavior) throws AkkagenException {
+    private void store(T req, Consumer<T> storeBehavior) throws AkkagenException {
         storeBehavior.accept(req);
     }
 
-    protected Route handlePostPutRequest(ActionType type, AbstractEngineDefinition req,
-                                            BiFunction<ActionType, AbstractEngineDefinition, Route> behavior) {
+    private Route handlePostPutRequest(ActionType type, T req,
+                                            BiFunction<ActionType, T, Route> behavior) {
         return behavior.apply(type, req);
     }
 
-    protected Route handleDeleteGetRequest(ActionType type, String id,
+    private Route handleDeleteGetRequest(ActionType type, String id,
                                               BiFunction<ActionType, String, Route> behavior) {
         return behavior.apply(type, id);
     }
 
-    protected BiFunction<ActionType, AbstractEngineDefinition, Route> getCreatePostPutNBInputBehavior() {
+    private BiFunction<ActionType, T, Route> getCreatePostPutNBInputBehavior() {
         return createPostPutNBInputBehavior;
     }
 
-    protected BiFunction<ActionType, String, Route> getCreateDeleteGetNBInputBehavior() {
+    private BiFunction<ActionType, String, Route> getCreateDeleteGetNBInputBehavior() {
         return createDeleteGetNBInputBehavior;
     }
 
-    protected Route handleRequest(String method, AbstractEngineDefinition req, HttpRequest request){
+    public ManagementServiceProvider(String path, Class<T> klass, Predicate<T> inputValidator){
+        this.path = path;
+        this.klass = klass;
+        this.inputValidator = inputValidator;
+        storage = new ManagementServiceProviderStorage<T>();
+        Akkagen.getInstance().getServiceProviderFactory().getManagementRestServer().addServiceProvider(path, this);
+    }
+    public String getPath(){return this.path;}
+    public Route handleRestCall(String method, String body, HttpRequest request){
+        T req = getObjectFromJson(body, klass);
+        Optional<String> id = request.getUri().query().get("id");
         switch(method){
             case "POST":
                 req.setId(UUID.randomUUID().toString());
                 return handlePostPutRequest(ActionType.CREATE, req, getCreatePostPutNBInputBehavior());
             case "PUT":
-                return handlePostPutRequest(ActionType.CREATE, req, getCreatePostPutNBInputBehavior());
+                return handlePostPutRequest(ActionType.UPDATE, req, getCreatePostPutNBInputBehavior());
             case "DELETE":
+                if(id.isPresent()){
+                    logger.debug("Got " + method + " request for id: " + id.get());
+                }
+                else{
+                    logger.debug("Got " + method + " request for invalid id");
+                    return complete(StatusCodes.BAD_REQUEST, "Invalid query input");
+                }
+                return handleDeleteGetRequest(ActionType.DELETE, id.get(), getCreateDeleteGetNBInputBehavior());
             case "GET":
+                if(id.isPresent()){
+                    logger.debug("Got " + method + " request for id: " + id.get());
+                }
+                else{
+                    logger.debug("Got " + method + " request for invalid id");
+                    return complete(StatusCodes.BAD_REQUEST, "Invalid query input");
+                }
+                return handleDeleteGetRequest(ActionType.GET, id.get(), getCreateDeleteGetNBInputBehavior());
             default:
                 return complete(StatusCodes.BAD_REQUEST, "Method not supported");
         }
     }
-    /*
-    * Methods that MUST be implemented by service providers
-    */
-
-    public abstract String getPath();
-    protected abstract AbstractEngineDefinition validateAndGetEngineDefinition(AbstractEngineDefinition req) throws AkkagenException;
-    protected abstract Route handleRestCall(String method, String body, HttpRequest request);
-
-    /*
-    * public methods
-    */
-
-    public ManagementServiceProvider(){}
 }

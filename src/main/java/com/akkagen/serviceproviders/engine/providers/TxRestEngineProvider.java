@@ -6,6 +6,7 @@ import akka.actor.Props;
 import com.akkagen.exceptions.AkkagenException;
 import com.akkagen.exceptions.AkkagenExceptionType;
 import com.akkagen.models.AbstractEngineDefinition;
+import com.akkagen.models.EngineInput;
 import com.akkagen.serviceproviders.engine.providers.actors.TxRestActor;
 import com.akkagen.serviceproviders.engine.providers.messages.RunMessage;
 import com.akkagen.serviceproviders.engine.providers.messages.StopMessage;
@@ -61,11 +62,10 @@ public class TxRestEngineProvider extends AbstractEngineProvider {
             (r, i, l) -> l.forEach(actor -> actor.tell(new StopMessage(i), ActorRef.noSender()));
 
 
-    @Override
     public void createEngine(AbstractEngineDefinition req) {
         ArrayList<ActorRef> actorList = new ArrayList<>();
         IntStream.range(0,req.getInstances()).forEach(i -> {
-            ActorRef actor = getSystem().actorOf(TxRestActor.props(), getPath() + "-" + i);
+            ActorRef actor = getSystem().actorOf(TxRestActor.props(), getPath().replace("/", "-") + "-" + i);
             actorList.add(actor);
         });
         addActorList(req.getId(), actorList);
@@ -73,16 +73,15 @@ public class TxRestEngineProvider extends AbstractEngineProvider {
         logger.debug("Created Engines for id: " + req.getId());
     }
 
-    @Override
     public void updateEngine(AbstractEngineDefinition req) {
         runActors(req, req.getId(), getActorList(req.getId()), runBehavior);
         logger.debug("Updated Engines for id: " + req.getId());
     }
 
-    @Override
     public void deleteEngine(AbstractEngineDefinition req) {
         runActors(req, req.getId(), getActorList(req.getId()), stopBehavior);
         deleteActorList(req.getId());
         logger.debug("Deleted Engines for id: " + req.getId());
     }
+
 }

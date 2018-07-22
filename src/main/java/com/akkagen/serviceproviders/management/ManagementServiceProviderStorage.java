@@ -8,24 +8,25 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-public class ManagementServiceProviderStorage {
+public class ManagementServiceProviderStorage<T extends AbstractEngineDefinition> {
 
     private final Logger logger = LoggerFactory.getLogger(ManagementServiceProviderStorage.class);
-    private ConcurrentHashMap<String, AbstractEngineDefinition> storage = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, T> storage = new ConcurrentHashMap<>();
 
     public ManagementServiceProviderStorage(){
 
     }
 
-    public AbstractEngineDefinition createEngineDefition(AbstractEngineDefinition req){
+    public T createEngineDefition(T req){
         storage.put(req.getId(), req);
-
+        logger.debug("Created Engine Definition: " + req.getPrintOut());
         return req;
     }
 
-    public AbstractEngineDefinition updateEngineDefinition(AbstractEngineDefinition req) throws AkkagenException {
+    public T updateEngineDefinition(T req) throws AkkagenException {
         if(storage.keySet().contains(req.getId())) {
             storage.replace(req.getId(), req);
+            logger.debug("updated Engine Definition: " + req.getPrintOut());
             return req;
         }
         else{
@@ -35,6 +36,7 @@ public class ManagementServiceProviderStorage {
 
     public void deleteEngineDefinitionById(String id) throws AkkagenException {
         if(storage.keySet().contains(id)) {
+            logger.debug("removing Engine Definition for id: " + id);
             storage.remove(id);
         }
         else{
@@ -42,8 +44,9 @@ public class ManagementServiceProviderStorage {
         }
     }
 
-    public AbstractEngineDefinition getEngineDefinitionById(String id) throws AkkagenException {
+    public T getEngineDefinitionById(String id) throws AkkagenException {
         if(storage.keySet().contains(id)) {
+            logger.debug("returning Engine Definition: " + storage.get(id));
             return storage.get(id);
         }
         else{
