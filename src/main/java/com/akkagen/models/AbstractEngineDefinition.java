@@ -12,10 +12,7 @@ public abstract class AbstractEngineDefinition {
     private String name;
     @JsonProperty
     private String description;
-    @JsonProperty
-    private int instances;
-    @JsonProperty
-    private int periodicity;
+
 
     public AbstractEngineDefinition() {
     }
@@ -29,12 +26,7 @@ public abstract class AbstractEngineDefinition {
     public String getDescription() {
         return description;
     }
-    public int getInstances() {
-        return instances;
-    }
-    public int getPeriodicity() {
-        return periodicity;
-    }
+
 
     public AbstractEngineDefinition setId(String id) {
         this.id = id;
@@ -48,17 +40,9 @@ public abstract class AbstractEngineDefinition {
         this.description = description;
         return this;
     }
-    public AbstractEngineDefinition setInstances(int instances) {
-        this.instances = instances;
-        return this;
-    }
-    public AbstractEngineDefinition setPeriodicity(int periodicity) {
-        this.periodicity = periodicity;
-        return this;
-    }
 
     public String getPrintOut(){
-        return String.format("id: %s\nname: %s\ndescription: %s\ninstances: %d\nperiodicity: %d\n",
-                id, name, description, instances, periodicity);
+        return String.format("id: %s\nname: %s\ndescription: %s\n",
+                id, name, description);
     }
 }

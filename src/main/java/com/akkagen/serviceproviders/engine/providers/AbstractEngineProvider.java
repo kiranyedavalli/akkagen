@@ -32,7 +32,7 @@ public abstract class AbstractEngineProvider<T extends AbstractEngineDefinition>
     protected abstract void updateEngine(T def);
     protected abstract void deleteEngine(T def);
 
-    public void processInput(EngineInput input){
+    private void processInput(EngineInput input){
         switch(input.getAction()){
             case POST:
                 createEngine((T)input.getEngineDefinition());

@@ -18,6 +18,10 @@ public class TxRestEngineDefinition extends AbstractEngineDefinition {
     private Map<String, String> headers;
     @JsonProperty
     private Map<String, String> queryParams;
+    @JsonProperty
+    private int instances;
+    @JsonProperty
+    private int periodicity;
 
     public TxRestEngineDefinition() {
     }
@@ -25,21 +29,21 @@ public class TxRestEngineDefinition extends AbstractEngineDefinition {
     public String getUrl() {
         return url;
     }
-
     public String getBody() {
         return body;
     }
-
     public String getMethod() {
         return method;
     }
-
-    public Map<String, String> getHeaders() {
-        return headers;
-    }
-
+    public Map<String, String> getHeaders() { return headers; }
     public Map<String, String> getQueryParams() {
         return queryParams;
+    }
+    public int getInstances() {
+        return instances;
+    }
+    public int getPeriodicity() {
+        return periodicity;
     }
 
     public TxRestEngineDefinition setUrl(String url) {
@@ -67,6 +71,15 @@ public class TxRestEngineDefinition extends AbstractEngineDefinition {
         return this;
     }
 
+    public TxRestEngineDefinition setInstances(int instances) {
+        this.instances = instances;
+        return this;
+    }
+    public TxRestEngineDefinition setPeriodicity(int periodicity) {
+        this.periodicity = periodicity;
+        return this;
+    }
+
     public String getPrintOut(){
         StringBuilder heads = new StringBuilder();
         if(headers!=null) {
@@ -76,7 +89,7 @@ public class TxRestEngineDefinition extends AbstractEngineDefinition {
         if(queryParams != null) {
             queryParams.forEach((k,v) -> queries.append(k + ":" + v));
         }
-        return String.format("%surl: %s\nbody: %s\nmethod: %s\nheaders: %s\nqueryParams: %s", super.getPrintOut(),
-                url, body, method, heads, queries);
+        return String.format("%surl: %s\nbody: %s\nmethod: %s\nheaders: %s\nqueryParams: %s\ninstances: %d\nperiodicity: %d", super.getPrintOut(),
+                url, body, method, heads, queries, instances, periodicity);
     }
 }

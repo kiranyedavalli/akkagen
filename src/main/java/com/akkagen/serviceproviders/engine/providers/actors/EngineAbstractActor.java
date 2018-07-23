@@ -17,9 +17,7 @@ public abstract class EngineAbstractActor<T extends AbstractEngineDefinition> ex
     private final Logger logger = LoggerFactory.getLogger(EngineAbstractActor.class);
     private T engineDefinition;
     private CalculatorRouter calculator;
-    private static Object TICK_KEY = "TickKey";
-    private static final class Tick {}
-    private static final class FirstTick{}
+
 
     protected EngineAbstractActor(){}
 
@@ -46,20 +44,6 @@ public abstract class EngineAbstractActor<T extends AbstractEngineDefinition> ex
         setEngineDefinition(req);
         runEngine(req);
         logger.debug("Engine " + getSelf() + " started for id: " + req.getId());
-        getTimers().startSingleTimer(TICK_KEY, new FirstTick(), Duration.ofMillis(req.getPeriodicity()));
-    }
-
-    private void firstTick(FirstTick t){
-        if (engineDefinition.getPeriodicity() > 0) {
-            getTimers().startPeriodicTimer(TICK_KEY, new Tick(), Duration.ofMillis(engineDefinition.getPeriodicity()));
-            logger.debug("Periodic timer for " + getSelf() + "started for id: "
-                    + engineDefinition.getId() + " of " + engineDefinition.getPeriodicity()
-                    + " milli-seconds");
-        }
-    }
-
-    private void periodicService(Tick t){
-        runEngine(getEngineDefinition());
     }
 
     @Override
@@ -67,8 +51,6 @@ public abstract class EngineAbstractActor<T extends AbstractEngineDefinition> ex
         return receiveBuilder()
                 .match(RunMessage.class, m -> runService((T)m.getReq()))
                 .match(StopMessage.class, m -> stopService(m.getId()))
-                .match(FirstTick.class, this::firstTick)
-                .match(Tick.class, this::periodicService)
                 .build();
     }
 }

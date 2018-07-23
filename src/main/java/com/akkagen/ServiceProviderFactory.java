@@ -5,10 +5,7 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.http.scaladsl.model.Uri;
 import com.akkagen.exceptions.AkkagenException;
-import com.akkagen.models.AbstractEngineDefinition;
-import com.akkagen.models.PathConstants;
-import com.akkagen.models.RxRestEngineDefinition;
-import com.akkagen.models.TxRestEngineDefinition;
+import com.akkagen.models.*;
 import com.akkagen.serviceproviders.engine.providers.RxRestEngineServer;
 import com.akkagen.serviceproviders.engine.providers.RxRestEngineProvider;
 import com.akkagen.serviceproviders.engine.providers.TxRestEngineProvider;
@@ -42,8 +39,11 @@ public class ServiceProviderFactory {
         logger.debug("Management Rest Server Started");
     }
 
-    public <T extends AbstractEngineDefinition> void initializeMgmtServiceProvider(String path, Class<T> klass, Predicate<T> t){
-        ManagementServiceProvider<T> sp = new ManagementServiceProvider<T>(path, klass, t);
+    public <T extends AbstractEngineDefinition> void initializeMgmtServiceProvider(String path,
+                                                                                   Class<T> klass,
+                                                                                   Predicate<T> t,
+                                                                                   Predicate<ActionType> action){
+        ManagementServiceProvider<T> sp = new ManagementServiceProvider<T>(path, klass, t, action);
         mgmtRestServer.addServiceProvider(path, sp);
     }
 

@@ -2,9 +2,7 @@ package com.akkagen;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import com.akkagen.models.PathConstants;
-import com.akkagen.models.RxRestEngineDefinition;
-import com.akkagen.models.TxRestEngineDefinition;
+import com.akkagen.models.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,10 +60,16 @@ public class Akkagen {
         Akkagen.getInstance().getServiceProviderFactory().initializeMgmtRestServer();
         Akkagen.getInstance().getServiceProviderFactory().initializeMgmtServiceProvider(PathConstants.__TX_REST,
                 TxRestEngineDefinition.class,
-                r -> true);
+                r -> true, // TODO: Need to implement input validation
+                t -> true); // Supports all methods
         Akkagen.getInstance().getServiceProviderFactory().initializeMgmtServiceProvider(PathConstants.__RX_REST,
                 RxRestEngineDefinition.class,
-                r -> true);
+                r -> true, // TODO: Need to implement input validation
+                t -> true); // Supports all methods
+        Akkagen.getInstance().getServiceProviderFactory().initializeMgmtServiceProvider(PathConstants.__RX_REST_STATS,
+                RxRestEngineStatsDefinition.class,
+                r->true, // No input to validate
+                t -> t.equals(ActionType.GET)); // Supports only GET method
 
         // Engines
 

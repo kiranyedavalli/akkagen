@@ -27,9 +27,6 @@ import static com.akkagen.utils.utils.getObjectFromJson;
 public class ManagementServiceProvider<T extends AbstractEngineDefinition> {
 
     private final Logger logger = LoggerFactory.getLogger(ManagementServiceProvider.class);
-    private Class<T> klass;
-    private String path;
-    private Predicate<T> inputValidator;
     private ManagementServiceProviderStorage<T> storage;
     private BiFunction<ActionType, T, Route> createPostPutNBInputBehavior = (t, r) -> {
             try{
@@ -159,14 +156,23 @@ public class ManagementServiceProvider<T extends AbstractEngineDefinition> {
         return createDeleteGetNBInputBehavior;
     }
 
-    public ManagementServiceProvider(String path, Class<T> klass, Predicate<T> inputValidator){
+    private Class<T> klass;
+    private String path;
+    private Predicate<T> inputValidator;
+    private Predicate<ActionType> methodValidator;
+    // TODO: Predicate for supported models
+    public ManagementServiceProvider(String path, Class<T> klass, Predicate<T> inputValidator, Predicate<ActionType> methodValidator){
         this.path = path;
         this.klass = klass;
         this.inputValidator = inputValidator;
+        this.methodValidator = methodValidator;
         storage = new ManagementServiceProviderStorage<T>();
     }
     public String getPath(){return this.path;}
     public Route handleRestCall(ActionType type, String body, HttpRequest request){
+        if(!methodValidator.test(type)){
+            return complete(StatusCodes.BAD_REQUEST, "Method: " + type.name() + " not supported");
+        }
         T req = getObjectFromJson(body, klass);
         Optional<String> id = request.getUri().query().get("id");
         switch(type){
