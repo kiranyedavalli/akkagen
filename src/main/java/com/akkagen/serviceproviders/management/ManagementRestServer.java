@@ -5,6 +5,7 @@ import akka.http.javadsl.model.HttpRequest;
 import akka.http.javadsl.model.StatusCodes;
 import akka.http.javadsl.server.Route;
 import com.akkagen.models.AbstractAkkaRestServer;
+import com.akkagen.models.ActionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +38,6 @@ public class ManagementRestServer extends AbstractAkkaRestServer {
             return complete(StatusCodes.NOT_FOUND, "Resource Not Found");
         }
         logger.debug("Found SP: " + sp.toString() + " for path: " + path);
-        return sp.handleRestCall(method, body, request);
+        return sp.handleRestCall(ActionType.getActionType(method), body, request);
     }
 }

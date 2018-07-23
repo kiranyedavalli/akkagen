@@ -2,15 +2,15 @@ package com.akkagen.serviceproviders.engine.providers.messages;
 
 import com.akkagen.models.AbstractEngineDefinition;
 
-public class RunMessage {
+public class RunMessage<T extends AbstractEngineDefinition> {
 
-    private AbstractEngineDefinition req;
+    private T req;
 
-    public RunMessage(AbstractEngineDefinition req){
+    public RunMessage(T req){
        this.req = req;
     }
 
-    public AbstractEngineDefinition getReq() {
+    public T getReq() {
         return req;
     }
 }

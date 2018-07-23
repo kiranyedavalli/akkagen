@@ -2,8 +2,13 @@ package com.akkagen;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import com.akkagen.models.PathConstants;
+import com.akkagen.models.RxRestEngineDefinition;
+import com.akkagen.models.TxRestEngineDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.function.Predicate;
 
 
 /*
@@ -51,9 +56,21 @@ public class Akkagen {
     public static void main(String[] args) {
         // The following order is important
         Akkagen.getInstance().initialize();
+
+        // Management
+
         Akkagen.getInstance().getServiceProviderFactory().initializeMgmtRestServer();
-        Akkagen.getInstance().getServiceProviderFactory().initializeManagementServiceProviders();
+        Akkagen.getInstance().getServiceProviderFactory().initializeMgmtServiceProvider(PathConstants.__TX_REST,
+                TxRestEngineDefinition.class,
+                r -> true);
+        Akkagen.getInstance().getServiceProviderFactory().initializeMgmtServiceProvider(PathConstants.__RX_REST,
+                RxRestEngineDefinition.class,
+                r -> true);
+
+        // Engines
+
         Akkagen.getInstance().getServiceProviderFactory().initializeEngineProviders();
+
         Akkagen.getInstance().getLogger().debug("***** Akkagen Started *****");
     }
 }

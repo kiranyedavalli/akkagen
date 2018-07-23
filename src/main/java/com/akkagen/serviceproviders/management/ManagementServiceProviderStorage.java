@@ -18,12 +18,14 @@ public class ManagementServiceProviderStorage<T extends AbstractEngineDefinition
     }
 
     public T createEngineDefition(T req){
+        //TODO: Add validations
         storage.put(req.getId(), req);
         logger.debug("Created Engine Definition: " + req.getPrintOut());
         return req;
     }
 
     public T updateEngineDefinition(T req) throws AkkagenException {
+        //TODO: Add validations
         if(storage.keySet().contains(req.getId())) {
             storage.replace(req.getId(), req);
             logger.debug("updated Engine Definition: " + req.getPrintOut());
@@ -35,6 +37,7 @@ public class ManagementServiceProviderStorage<T extends AbstractEngineDefinition
     }
 
     public void deleteEngineDefinitionById(String id) throws AkkagenException {
+        //TODO: Add validations
         if(storage.keySet().contains(id)) {
             logger.debug("removing Engine Definition for id: " + id);
             storage.remove(id);
@@ -45,6 +48,7 @@ public class ManagementServiceProviderStorage<T extends AbstractEngineDefinition
     }
 
     public T getEngineDefinitionById(String id) throws AkkagenException {
+        //TODO: Add validations
         if(storage.keySet().contains(id)) {
             logger.debug("returning Engine Definition: " + storage.get(id));
             return storage.get(id);

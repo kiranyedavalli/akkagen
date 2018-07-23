@@ -2,12 +2,14 @@ package com.akkagen.serviceproviders.engine.providers;
 
 
 import akka.actor.ActorSystem;
+import akka.http.javadsl.model.HttpMethod;
 import akka.http.javadsl.model.HttpRequest;
 import akka.http.javadsl.model.StatusCodes;
 import akka.http.javadsl.server.Route;
 import com.akkagen.exceptions.AkkagenException;
 import com.akkagen.exceptions.AkkagenExceptionType;
 import com.akkagen.models.AbstractAkkaRestServer;
+import com.akkagen.models.ActionType;
 import com.akkagen.models.RxRestEngineDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,6 +80,11 @@ public class RxRestEngineServer extends AbstractAkkaRestServer {
         if(value != null && value.equals(input)){
             rxRestEnginesCount.compute(uri, (u,l) -> l == null ? 1 : l+1);
             logger.debug(value.getPrintOut());
+            if(ActionType.getActionType(method).equals(ActionType.POST) ||
+                    ActionType.getActionType(method).equals(ActionType.PUT) ||
+                    ActionType.getActionType(method).equals(ActionType.DELETE)) {
+                return complete(StatusCodes.ACCEPTED, value.getResponseBody());
+            }
             return complete(StatusCodes.OK, value.getResponseBody());
         }
         return complete(StatusCodes.NOT_FOUND,"Input not supported");

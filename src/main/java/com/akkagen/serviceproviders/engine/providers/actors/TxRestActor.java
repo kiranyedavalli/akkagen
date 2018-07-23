@@ -7,21 +7,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.akkagen.models.TxRestEngineDefinition;
 
-public class TxRestActor extends EngineAbstractActor {
+public class TxRestActor extends EngineAbstractActor<TxRestEngineDefinition> {
 
     private final Logger logger = LoggerFactory.getLogger(TxRestActor.class);
-    private TxRestEngineDefinition txRestNBRequest;
 
     public static Props props(){
-        return Props.create(TxRestActor.class, () -> new TxRestActor());
+        return Props.create(TxRestActor.class, TxRestActor::new);
     }
 
     private TxRestActor(){}
 
     @Override
-    protected void runEngine(AbstractEngineDefinition req) {
-        this.txRestNBRequest = (TxRestEngineDefinition) req;
+    protected void runEngine(TxRestEngineDefinition req) {
         //TODO: do the rest client
-        logger.debug("In TxRestActor " + getSelf() + ":: " + req.toString() + "with req: " + txRestNBRequest.getPrintOut());
+        logger.debug("In TxRestActor " + getSelf() + ":: " + req.toString() + "with req: " + req.getPrintOut());
     }
 }

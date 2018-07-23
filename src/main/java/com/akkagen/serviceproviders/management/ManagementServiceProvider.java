@@ -5,6 +5,7 @@ import akka.http.javadsl.marshallers.jackson.Jackson;
 import akka.http.javadsl.model.HttpRequest;
 import akka.http.javadsl.model.StatusCodes;
 import akka.http.javadsl.server.Route;
+import akka.http.scaladsl.model.HttpMethods;
 import com.akkagen.Akkagen;
 import com.akkagen.exceptions.AkkagenException;
 import com.akkagen.exceptions.AkkagenExceptionType;
@@ -62,8 +63,6 @@ public class ManagementServiceProvider<T extends AbstractEngineDefinition> {
         }
     };
 
-    // Private methods
-
     private ManagementServiceProviderStorage<T> getStorage(){
         return storage;
     }
@@ -84,14 +83,12 @@ public class ManagementServiceProvider<T extends AbstractEngineDefinition> {
     }
 
     private T handleMgmtRequest(NBInput<T> input) throws AkkagenException {
-
-        // Validate the input and send it to datapath
         T req = null;
         ActionType actionType = input.getAction();
         String id = null;
         switch (actionType) {
-            case CREATE:
-            case UPDATE:
+            case POST:
+            case PUT:
                 req = input.getEngineDefinition();
                 if(req == null){
                     throw new AkkagenException("The request object is empty", AkkagenExceptionType.BAD_REQUEST);
@@ -167,33 +164,32 @@ public class ManagementServiceProvider<T extends AbstractEngineDefinition> {
         this.klass = klass;
         this.inputValidator = inputValidator;
         storage = new ManagementServiceProviderStorage<T>();
-        Akkagen.getInstance().getServiceProviderFactory().getManagementRestServer().addServiceProvider(path, this);
     }
     public String getPath(){return this.path;}
-    public Route handleRestCall(String method, String body, HttpRequest request){
+    public Route handleRestCall(ActionType type, String body, HttpRequest request){
         T req = getObjectFromJson(body, klass);
         Optional<String> id = request.getUri().query().get("id");
-        switch(method){
-            case "POST":
+        switch(type){
+            case POST:
                 req.setId(UUID.randomUUID().toString());
-                return handlePostPutRequest(ActionType.CREATE, req, getCreatePostPutNBInputBehavior());
-            case "PUT":
-                return handlePostPutRequest(ActionType.UPDATE, req, getCreatePostPutNBInputBehavior());
-            case "DELETE":
+                return handlePostPutRequest(ActionType.POST, req, getCreatePostPutNBInputBehavior());
+            case PUT:
+                return handlePostPutRequest(ActionType.PUT, req, getCreatePostPutNBInputBehavior());
+            case DELETE:
                 if(id.isPresent()){
-                    logger.debug("Got " + method + " request for id: " + id.get());
+                    logger.debug("Got " + type + " request for id: " + id.get());
                 }
                 else{
-                    logger.debug("Got " + method + " request for invalid id");
+                    logger.debug("Got " + type + " request for invalid id");
                     return complete(StatusCodes.BAD_REQUEST, "Invalid query input");
                 }
                 return handleDeleteGetRequest(ActionType.DELETE, id.get(), getCreateDeleteGetNBInputBehavior());
-            case "GET":
+            case GET:
                 if(id.isPresent()){
-                    logger.debug("Got " + method + " request for id: " + id.get());
+                    logger.debug("Got " + type + " request for id: " + id.get());
                 }
                 else{
-                    logger.debug("Got " + method + " request for invalid id");
+                    logger.debug("Got " + type + " request for invalid id");
                     return complete(StatusCodes.BAD_REQUEST, "Invalid query input");
                 }
                 return handleDeleteGetRequest(ActionType.GET, id.get(), getCreateDeleteGetNBInputBehavior());

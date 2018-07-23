@@ -7,7 +7,7 @@ import com.akkagen.models.AbstractEngineDefinition;
 import com.akkagen.models.EngineInput;
 import com.akkagen.models.RxRestEngineDefinition;
 
-public class RxRestEngineProvider extends AbstractEngineProvider {
+public class RxRestEngineProvider extends AbstractEngineProvider<RxRestEngineDefinition> {
 
     private RxRestEngineServer rxRestEngineServer;
     private final String host = "localhost";
@@ -23,17 +23,17 @@ public class RxRestEngineProvider extends AbstractEngineProvider {
     }
 
     @Override
-    public void createEngine(AbstractEngineDefinition def) {
-        rxRestEngineServer.addRxRestEngine((RxRestEngineDefinition)def);
+    public void createEngine(RxRestEngineDefinition def) {
+        rxRestEngineServer.addRxRestEngine(def);
     }
 
     @Override
-    public void updateEngine(AbstractEngineDefinition def) {
-        rxRestEngineServer.updateRxRestEngine((RxRestEngineDefinition)def);
+    public void updateEngine(RxRestEngineDefinition def) {
+        rxRestEngineServer.updateRxRestEngine(def);
     }
 
     @Override
-    public void deleteEngine(AbstractEngineDefinition def) {
-        rxRestEngineServer.deleteRxRestEngine((RxRestEngineDefinition)def);
+    public void deleteEngine(RxRestEngineDefinition def) {
+        rxRestEngineServer.deleteRxRestEngine(def);
     }
 }

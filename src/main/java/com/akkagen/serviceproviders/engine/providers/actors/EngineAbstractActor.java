@@ -1,7 +1,6 @@
 package com.akkagen.serviceproviders.engine.providers.actors;
 
 import akka.actor.AbstractActorWithTimers;
-import akka.actor.ActorSystem;
 import com.akkagen.exceptions.AkkagenException;
 import com.akkagen.exceptions.AkkagenExceptionType;
 import com.akkagen.models.AbstractEngineDefinition;
@@ -13,10 +12,10 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 
-public abstract class EngineAbstractActor extends AbstractActorWithTimers {
+public abstract class EngineAbstractActor<T extends AbstractEngineDefinition> extends AbstractActorWithTimers {
 
     private final Logger logger = LoggerFactory.getLogger(EngineAbstractActor.class);
-    private AbstractEngineDefinition abstractEngineDefinition;
+    private T engineDefinition;
     private CalculatorRouter calculator;
     private static Object TICK_KEY = "TickKey";
     private static final class Tick {}
@@ -25,48 +24,48 @@ public abstract class EngineAbstractActor extends AbstractActorWithTimers {
     protected EngineAbstractActor(){}
 
     // Has to be implemented by individual request Actors
-    protected abstract void runEngine(AbstractEngineDefinition req);
+    protected abstract void runEngine(T req);
 
-    protected AbstractEngineDefinition getAbstractEngineDefinition() {
-        return abstractEngineDefinition;
+    protected T getEngineDefinition() {
+        return engineDefinition;
     }
 
-    protected void setAbstractEngineDefinition(AbstractEngineDefinition abstractEngineDefinition) {
-        this.abstractEngineDefinition = abstractEngineDefinition;
+    protected void setEngineDefinition(T engineDefinition) {
+        this.engineDefinition = engineDefinition;
     }
 
     private void stopService(String id) {
-        if(!id.equals(this.abstractEngineDefinition.getId())){
+        if(!id.equals(this.engineDefinition.getId())){
             throw new AkkagenException("Wrong Actor is called for stopping service!", AkkagenExceptionType.INTERAL_ERROR);
         }
         logger.debug("Stopping Actor: " + getSelf());
         getContext().stop(getSelf());
     }
 
-    private void runService(AbstractEngineDefinition req) {
-        setAbstractEngineDefinition(req);
+    private void runService(T req) {
+        setEngineDefinition(req);
         runEngine(req);
         logger.debug("Engine " + getSelf() + " started for id: " + req.getId());
         getTimers().startSingleTimer(TICK_KEY, new FirstTick(), Duration.ofMillis(req.getPeriodicity()));
     }
 
     private void firstTick(FirstTick t){
-        if (abstractEngineDefinition.getPeriodicity() > 0) {
-            getTimers().startPeriodicTimer(TICK_KEY, new Tick(), Duration.ofMillis(abstractEngineDefinition.getPeriodicity()));
+        if (engineDefinition.getPeriodicity() > 0) {
+            getTimers().startPeriodicTimer(TICK_KEY, new Tick(), Duration.ofMillis(engineDefinition.getPeriodicity()));
             logger.debug("Periodic timer for " + getSelf() + "started for id: "
-                    + abstractEngineDefinition.getId() + " of " + abstractEngineDefinition.getPeriodicity()
+                    + engineDefinition.getId() + " of " + engineDefinition.getPeriodicity()
                     + " milli-seconds");
         }
     }
 
     private void periodicService(Tick t){
-        runEngine(getAbstractEngineDefinition());
+        runEngine(getEngineDefinition());
     }
 
     @Override
     public Receive createReceive() {
         return receiveBuilder()
-                .match(RunMessage.class, m -> runService(m.getReq()))
+                .match(RunMessage.class, m -> runService((T)m.getReq()))
                 .match(StopMessage.class, m -> stopService(m.getId()))
                 .match(FirstTick.class, this::firstTick)
                 .match(Tick.class, this::periodicService)

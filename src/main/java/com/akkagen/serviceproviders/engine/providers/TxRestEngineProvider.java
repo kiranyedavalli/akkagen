@@ -7,6 +7,7 @@ import com.akkagen.exceptions.AkkagenException;
 import com.akkagen.exceptions.AkkagenExceptionType;
 import com.akkagen.models.AbstractEngineDefinition;
 import com.akkagen.models.EngineInput;
+import com.akkagen.models.TxRestEngineDefinition;
 import com.akkagen.serviceproviders.engine.providers.actors.TxRestActor;
 import com.akkagen.serviceproviders.engine.providers.messages.RunMessage;
 import com.akkagen.serviceproviders.engine.providers.messages.StopMessage;
@@ -18,7 +19,7 @@ import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
-public class TxRestEngineProvider extends AbstractEngineProvider {
+public class TxRestEngineProvider extends AbstractEngineProvider<TxRestEngineDefinition> {
 
     private Logger logger = LoggerFactory.getLogger(TxRestEngineProvider.class);
     private ConcurrentHashMap<String, ArrayList<ActorRef>> actorMap = new ConcurrentHashMap<>();
@@ -49,20 +50,20 @@ public class TxRestEngineProvider extends AbstractEngineProvider {
         return actorMap.get(id);
     }
 
-    private void runActors(AbstractEngineDefinition req, String id, ArrayList<ActorRef> actorList,
-                           TriConsumer<AbstractEngineDefinition, String, ArrayList<ActorRef>> runBehavior){
+    private void runActors(TxRestEngineDefinition req, String id, ArrayList<ActorRef> actorList,
+                           TriConsumer<TxRestEngineDefinition, String, ArrayList<ActorRef>> runBehavior){
         logger.debug("Sending Message to Actors for id: " + id);
         runBehavior.accept(req, id, actorList);
     }
 
-    private TriConsumer<AbstractEngineDefinition, String, ArrayList<ActorRef>> runBehavior =
-            (r, i, l) -> l.forEach(actor -> actor.tell(new RunMessage(r), ActorRef.noSender()));
+    private TriConsumer<TxRestEngineDefinition, String, ArrayList<ActorRef>> runBehavior =
+            (r, i, l) -> l.forEach(actor -> actor.tell(new RunMessage<TxRestEngineDefinition>(r), ActorRef.noSender()));
 
-    private TriConsumer<AbstractEngineDefinition, String, ArrayList<ActorRef>> stopBehavior =
+    private TriConsumer<TxRestEngineDefinition, String, ArrayList<ActorRef>> stopBehavior =
             (r, i, l) -> l.forEach(actor -> actor.tell(new StopMessage(i), ActorRef.noSender()));
 
 
-    public void createEngine(AbstractEngineDefinition req) {
+    public void createEngine(TxRestEngineDefinition req) {
         ArrayList<ActorRef> actorList = new ArrayList<>();
         IntStream.range(0,req.getInstances()).forEach(i -> {
             ActorRef actor = getSystem().actorOf(TxRestActor.props(), getPath().replace("/", "-") + "-" + i);
@@ -73,12 +74,12 @@ public class TxRestEngineProvider extends AbstractEngineProvider {
         logger.debug("Created Engines for id: " + req.getId());
     }
 
-    public void updateEngine(AbstractEngineDefinition req) {
+    public void updateEngine(TxRestEngineDefinition req) {
         runActors(req, req.getId(), getActorList(req.getId()), runBehavior);
         logger.debug("Updated Engines for id: " + req.getId());
     }
 
-    public void deleteEngine(AbstractEngineDefinition req) {
+    public void deleteEngine(TxRestEngineDefinition req) {
         runActors(req, req.getId(), getActorList(req.getId()), stopBehavior);
         deleteActorList(req.getId());
         logger.debug("Deleted Engines for id: " + req.getId());

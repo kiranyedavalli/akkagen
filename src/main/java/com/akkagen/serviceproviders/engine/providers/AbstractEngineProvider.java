@@ -28,20 +28,20 @@ public abstract class AbstractEngineProvider<T extends AbstractEngineDefinition>
         return path;
     }
 
-    protected abstract void createEngine(AbstractEngineDefinition def);
-    protected abstract void updateEngine(AbstractEngineDefinition def);
-    protected abstract void deleteEngine(AbstractEngineDefinition def);
+    protected abstract void createEngine(T def);
+    protected abstract void updateEngine(T def);
+    protected abstract void deleteEngine(T def);
 
     public void processInput(EngineInput input){
         switch(input.getAction()){
-            case CREATE:
-                createEngine(input.getEngineDefinition());
+            case POST:
+                createEngine((T)input.getEngineDefinition());
                 break;
-            case UPDATE:
-                updateEngine(input.getEngineDefinition());
+            case PUT:
+                updateEngine((T)input.getEngineDefinition());
                 break;
             case DELETE:
-                deleteEngine(input.getEngineDefinition());
+                deleteEngine((T)input.getEngineDefinition());
                 break;
             default:
                 throw new AkkagenException("Unknown actiontype");
