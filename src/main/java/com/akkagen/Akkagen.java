@@ -68,7 +68,7 @@ public class Akkagen {
                 t -> true); // Supports all methods
         Akkagen.getInstance().getServiceProviderFactory().initializeMgmtServiceProvider(PathConstants.__RX_REST_STATS,
                 RxRestEngineStatsDefinition.class,
-                r->true, // No input to validate
+                r -> true, // No input to validate
                 t -> t.equals(ActionType.GET)); // Supports only GET method
 
         // Engines

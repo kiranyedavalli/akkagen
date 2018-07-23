@@ -52,12 +52,8 @@ dependencies {
     compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'
     compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
 
-    // Webapp support
-   	compile group: 'org.glassfish.jersey.core', name: 'jersey-server', version: '2.7'
-    compile group: 'org.glassfish.jersey.containers', name: 'jersey-container-servlet-core', version: '2.7'
-    compile group: 'org.glassfish.jersey.containers', name: 'jersey-container-jetty-http', version: '2.7'
-    compile group: 'org.glassfish.jersey.media', name: 'jersey-media-moxy', version: '2.7'
-    compile group: 'org.eclipse.jetty.aggregate', name: 'jetty-all', version: '9.3.0.M1'
+    //http support
+    compile 'com.squareup.okhttp3:okhttp:3.11.0'
 
     // Use JUnit test framework
     testCompile 'junit:junit:4.12'

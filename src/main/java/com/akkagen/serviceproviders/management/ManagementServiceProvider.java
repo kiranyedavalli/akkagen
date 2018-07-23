@@ -160,7 +160,6 @@ public class ManagementServiceProvider<T extends AbstractEngineDefinition> {
     private String path;
     private Predicate<T> inputValidator;
     private Predicate<ActionType> methodValidator;
-    // TODO: Predicate for supported models
     public ManagementServiceProvider(String path, Class<T> klass, Predicate<T> inputValidator, Predicate<ActionType> methodValidator){
         this.path = path;
         this.klass = klass;
