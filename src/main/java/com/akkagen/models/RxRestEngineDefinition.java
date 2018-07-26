@@ -2,11 +2,19 @@ package com.akkagen.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.Map;
+
+import static com.akkagen.utils.utils.getJSONStringDiff;
+import static com.akkagen.utils.utils.getMapAsString;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RxRestEngineDefinition extends AbstractEngineDefinition {
+
+    private final Logger logger = LoggerFactory.getLogger(RxRestEngineDefinition.class);
 
     @JsonProperty
     private String uri;
@@ -15,7 +23,7 @@ public class RxRestEngineDefinition extends AbstractEngineDefinition {
     @JsonProperty
     private String method;
     @JsonProperty
-    private Map<String, String> headers;
+    private Map<String, String> headers = new HashMap<>();
     @JsonProperty
     private String responseBody; // For Get
 
@@ -68,24 +76,35 @@ public class RxRestEngineDefinition extends AbstractEngineDefinition {
     }
 
     public boolean equals(RxRestEngineDefinition def){
-        if(def.getUri().equals(this.uri) &&
-                def.getMethod().equals(this.method) &&
-                def.getRequestBody().equals(this.requestBody) &&
-                def.getHeaders().entrySet().containsAll(this.headers.entrySet())){
-            return true;
+        if(!this.uri.equals(def.getUri())) {
+            logger.debug("Input URI " + def.getUri() + " does not match stored URI: " + this.uri);
+            return false;
         }
-        return false;
+
+        if(!this.method.equals(def.getMethod())) {
+            logger.debug("Input method " + def.getMethod() + " does not match stored method: " + this.method);
+            return false;
+        }
+
+        logger.debug("Request body diff: " + getJSONStringDiff(this.requestBody, def.getRequestBody()));
+/*
+        if(!(this.requestBody.contains(def.getRequestBody()) || def.getRequestBody().contains(this.requestBody))) {
+            logger.debug("Input RequestBody " + def.getRequestBody() + " does not match stored RequestBody: " + this.requestBody);
+            return false;
+        }
+*/
+
+        if(!(this.headers.entrySet().containsAll(def.getHeaders().entrySet()) ||
+                def.getHeaders().entrySet().containsAll(this.headers.entrySet()))) {
+            logger.debug("Input Headers " + getMapAsString(def.getHeaders()) + " does not match stored headers: " + getMapAsString(this.headers));
+            return false;
+        }
+        return true;
     }
 
     public String getPrintOut(){
-
-        StringBuilder heads = new StringBuilder();
-        if(headers!=null) {
-            headers.forEach((k, v) -> heads.append(k + ":" + v));
-        }
-
         return new StringBuilder().append(super.getPrintOut() + "uri: "+ uri + "\nrequestBody: " + requestBody
-                + "\nmethod: " + method + "\nheaders: " + heads
+                + "\nmethod: " + method + "\nheaders: " + getMapAsString(headers)
                 + "\nresponseBody: " + responseBody).toString();
 
     }

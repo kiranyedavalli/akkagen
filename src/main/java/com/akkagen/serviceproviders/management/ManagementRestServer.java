@@ -32,10 +32,11 @@ public class ManagementRestServer extends AbstractAkkaRestServer {
     @Override
     protected Route handleRestCall(String method, String body, HttpRequest request){
         String path = request.getUri().getPathString();
+        logger.debug("Received path: " + path +"\nbody: " + body);
         ManagementServiceProvider sp = getManagementServiceProvider(path);
         if(sp == null) {
             logger.debug("No SP found for path: " + path);
-            return complete(StatusCodes.NOT_FOUND, "Resource Not Found");
+            return complete(StatusCodes.NOT_FOUND, "Service provider for " + path + " Not Found");
         }
         logger.debug("Found SP: " + sp.toString() + " for path: " + path);
         return sp.handleRestCall(ActionType.getActionType(method), body, request);

@@ -32,7 +32,7 @@ public class ServiceProviderFactory {
      *    MANAGEMENT
      */
     private ManagementRestServer mgmtRestServer = null;
-    private final int mgmtPort = 9000;
+    private final int mgmtPort = 9010;
 
     public void initializeMgmtRestServer(){
         mgmtRestServer = new ManagementRestServer(system, host, mgmtPort);

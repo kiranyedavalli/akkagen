@@ -3,6 +3,7 @@ package com.akkagen.models;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -13,11 +14,13 @@ public class TxRestEngineDefinition extends AbstractEngineDefinition {
     @JsonProperty
     private String body;
     @JsonProperty
-    private String method;
+    private ActionType method;
     @JsonProperty
-    private Map<String, String> headers;
+    private Map<String, String> headers = new HashMap<>();
     @JsonProperty
-    private Map<String, String> queryParams;
+    private Map<String, String> queryParams = new HashMap<>();
+    @JsonProperty
+    private String expectedResponse;
     @JsonProperty
     private int instances;
     @JsonProperty
@@ -32,7 +35,7 @@ public class TxRestEngineDefinition extends AbstractEngineDefinition {
     public String getBody() {
         return body;
     }
-    public String getMethod() {
+    public ActionType getMethod() {
         return method;
     }
     public Map<String, String> getHeaders() { return headers; }
@@ -45,6 +48,7 @@ public class TxRestEngineDefinition extends AbstractEngineDefinition {
     public int getPeriodicity() {
         return periodicity;
     }
+    public String getExpectedResponse() { return expectedResponse; }
 
     public TxRestEngineDefinition setUrl(String url) {
         this.url = url;
@@ -56,7 +60,7 @@ public class TxRestEngineDefinition extends AbstractEngineDefinition {
         return this;
     }
 
-    public TxRestEngineDefinition setMethod(String method) {
+    public TxRestEngineDefinition setMethod(ActionType method) {
         this.method = method;
         return this;
     }
@@ -80,6 +84,11 @@ public class TxRestEngineDefinition extends AbstractEngineDefinition {
         return this;
     }
 
+    public TxRestEngineDefinition setExpectedResponse(String expectedResponse) {
+        this.expectedResponse = expectedResponse;
+        return this;
+    }
+
     public String getPrintOut(){
         StringBuilder heads = new StringBuilder();
         if(headers!=null) {
@@ -89,7 +98,8 @@ public class TxRestEngineDefinition extends AbstractEngineDefinition {
         if(queryParams != null) {
             queryParams.forEach((k,v) -> queries.append(k + ":" + v));
         }
-        return String.format("%surl: %s\nbody: %s\nmethod: %s\nheaders: %s\nqueryParams: %s\ninstances: %d\nperiodicity: %d", super.getPrintOut(),
-                url, body, method, heads, queries, instances, periodicity);
+        return String.format("%surl: %s\nbody: %s\nmethod: %s\nheaders: %s\nqueryParams: %s\ninstances: %d" +
+                        "\nperiodicity: %d\nexpectedResponse: %s",
+                super.getPrintOut(), url, body, method, heads, queries, instances, periodicity, expectedResponse);
     }
 }

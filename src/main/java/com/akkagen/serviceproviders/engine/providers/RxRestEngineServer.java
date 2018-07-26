@@ -79,7 +79,7 @@ public class RxRestEngineServer extends AbstractAkkaRestServer {
         RxRestEngineDefinition value = getRxRestEngine(uri);
         if(value != null && value.equals(input)){
             rxRestEnginesCount.compute(uri, (u,l) -> l == null ? 1 : l+1);
-            logger.debug(value.getPrintOut());
+            logger.debug("Found a match: " + value.getPrintOut());
             if(ActionType.getActionType(method).equals(ActionType.POST) ||
                     ActionType.getActionType(method).equals(ActionType.PUT) ||
                     ActionType.getActionType(method).equals(ActionType.DELETE)) {
@@ -87,6 +87,7 @@ public class RxRestEngineServer extends AbstractAkkaRestServer {
             }
             return complete(StatusCodes.OK, value.getResponseBody());
         }
+        logger.debug("DID NOT FIND A MATCH FOR: "  + value.getPrintOut());
         return complete(StatusCodes.NOT_FOUND,"Input not supported");
     }
 

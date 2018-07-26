@@ -46,6 +46,7 @@ dependencies {
     compile 'com.fasterxml.jackson.core:jackson-annotations:2.7.5'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.7.5'
     compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
+    compile group: 'com.flipkart.zjsonpatch', name: 'zjsonpatch', version: '0.4.4'
 
     // Logging support
     compile group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.25'
