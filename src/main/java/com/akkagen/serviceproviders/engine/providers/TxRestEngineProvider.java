@@ -5,19 +5,21 @@ import akka.actor.ActorSystem;
 import akka.actor.Props;
 import com.akkagen.exceptions.AkkagenException;
 import com.akkagen.exceptions.AkkagenExceptionType;
-import com.akkagen.models.AbstractEngineDefinition;
-import com.akkagen.models.EngineInput;
 import com.akkagen.models.TxRestEngineDefinition;
 import com.akkagen.serviceproviders.engine.providers.actors.TxRestActor;
-import com.akkagen.serviceproviders.engine.providers.messages.RunMessage;
+import com.akkagen.serviceproviders.engine.providers.messages.StartMessage;
 import com.akkagen.serviceproviders.engine.providers.messages.StopMessage;
+import com.akkagen.serviceproviders.engine.providers.messages.UpdateMessage;
 import com.akkagen.utils.TriConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
+
+import static java.lang.Math.abs;
 
 public class TxRestEngineProvider extends AbstractEngineProvider<TxRestEngineDefinition> {
 
@@ -57,15 +59,20 @@ public class TxRestEngineProvider extends AbstractEngineProvider<TxRestEngineDef
     }
 
     private TriConsumer<TxRestEngineDefinition, String, ArrayList<ActorRef>> runBehavior =
-            (r, i, l) -> l.forEach(actor -> actor.tell(new RunMessage<TxRestEngineDefinition>(r), ActorRef.noSender()));
+            (r, i, l) -> l.forEach(actor -> actor.tell(new StartMessage<TxRestEngineDefinition>(r), ActorRef.noSender()));
+
+    private TriConsumer<TxRestEngineDefinition, String, ArrayList<ActorRef>> updateBehavior =
+            (r, i, l) -> l.forEach(actor -> actor.tell(new UpdateMessage<TxRestEngineDefinition>(r), ActorRef.noSender()));
 
     private TriConsumer<TxRestEngineDefinition, String, ArrayList<ActorRef>> stopBehavior =
             (r, i, l) -> l.forEach(actor -> actor.tell(new StopMessage(i), ActorRef.noSender()));
 
+    private int instances = 0;
 
     public void createEngine(TxRestEngineDefinition req) {
         ArrayList<ActorRef> actorList = new ArrayList<>();
-        IntStream.range(0,req.getInstances()).forEach(i -> {
+        instances = req.getInstances();
+        IntStream.range(0,instances).forEach(i -> {
             ActorRef actor = getSystem().actorOf(TxRestActor.props(), getPath().replace("/", "-") + "-" + i);
             actorList.add(actor);
         });
@@ -75,7 +82,23 @@ public class TxRestEngineProvider extends AbstractEngineProvider<TxRestEngineDef
     }
 
     public void updateEngine(TxRestEngineDefinition req) {
-        runActors(req, req.getId(), getActorList(req.getId()), runBehavior);
+        int diff = abs(instances - req.getInstances());
+        if(instances > req.getInstances()){
+            logger.debug("Adding " + diff + " number of new actors");
+            IntStream.range(0, diff).forEach(i -> {
+                ActorRef actor = getSystem().actorOf(TxRestActor.props(), getPath().replace("/", "-") + "-" + instances + i);
+                getActorList(req.getId()).add(actor);
+            });
+        }else if(instances < req.getInstances()){
+            logger.debug("Removing " + diff + " number of actors");
+            ArrayList<ActorRef> killActorList = new ArrayList<>();
+            IntStream.range(0, diff).forEach(i -> {
+                killActorList.add(getActorList(req.getId()).get(i));
+                getActorList(req.getId()).remove(i);
+            });
+            runActors(req, req.getId(), killActorList, stopBehavior);
+        }
+        runActors(req, req.getId(), getActorList(req.getId()), updateBehavior);
         logger.debug("Updated Engines for id: " + req.getId());
     }
 

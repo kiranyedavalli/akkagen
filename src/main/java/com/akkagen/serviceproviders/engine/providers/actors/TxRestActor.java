@@ -10,7 +10,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.akkagen.models.TxRestEngineDefinition;
 
+import javax.net.ssl.*;
 import java.io.IOException;
+import java.security.cert.CertificateException;
 import java.time.Duration;
 import java.util.UUID;
 
@@ -30,6 +32,51 @@ public class TxRestActor extends EngineAbstractActor<TxRestEngineDefinition> {
     }
 
     private TxRestActor(){}
+
+    private OkHttpClient getHttpClient(TxRestEngineDefinition def){
+        if(def.getUrl().startsWith("https")){
+            logger.debug("Its https");
+            try {
+                // Create a trust manager that does not validate certificate chains
+                final TrustManager[] trustAllCerts = new TrustManager[] {
+                        new X509TrustManager() {
+                            @Override
+                            public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType)
+                                    throws CertificateException {
+                            }
+
+                            @Override
+                            public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType)
+                                    throws CertificateException {
+                            }
+
+                            @Override
+                            public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                                return new java.security.cert.X509Certificate[]{};
+                            }
+                        }
+                };
+
+                // Install the all-trusting trust manager
+                final SSLContext sslContext = SSLContext.getInstance("SSL");
+                sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+                // Create an ssl socket factory with our all-trusting manager
+                final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+
+                return new OkHttpClient.Builder()
+                        .sslSocketFactory(sslSocketFactory, (X509TrustManager)trustAllCerts[0])
+                        .hostnameVerifier((hostname, session) -> true)
+                        .build();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+        else if(def.getUrl().startsWith("http")){
+            logger.debug("Its http");
+            return new OkHttpClient();
+        }
+        throw new AkkagenException("Unknown HTTP protocol specified!!!", AkkagenExceptionType.BAD_REQUEST);
+    }
 
     private Request createRequest(TxRestEngineDefinition req){
         Request.Builder request = new Request.Builder();
@@ -71,14 +118,10 @@ public class TxRestActor extends EngineAbstractActor<TxRestEngineDefinition> {
         return request.build();
     }
 
-    @Override
-    protected void runEngine(TxRestEngineDefinition req) {
-        this.def = req;
-        OkHttpClient client = new OkHttpClient();
-        Request request = createRequest(req);
-
+    private void runEngine(TxRestEngineDefinition def){
+        Request request = createRequest(def);
         logger.debug("Calling REST Out to " + request.url().toString());
-        client.newCall(request).enqueue(new Callback() {
+        getHttpClient(def).newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
                 e.printStackTrace();
@@ -93,21 +136,45 @@ public class TxRestActor extends EngineAbstractActor<TxRestEngineDefinition> {
                 }
             }
         });
+    }
+
+    private long periodicTimer = 0;
+
+    @Override
+    protected void startEngine(TxRestEngineDefinition def) {
+        this.def = def;
+        this.periodicTimer = def.getPeriodicity();
 
         // Start the timer if it exists
-        logger.debug("In TxRestActor " + getSelf() + ":: " + req.toString() + "with req: " + req.getPrintOut());
-        if(req.getPeriodicity() > 0) {
-            getTimers().startSingleTimer(TICK_KEY, new FirstTick(), Duration.ofMillis(req.getPeriodicity()));
+        logger.debug("In TxRestActor " + getSelf() + ":: " + def.toString() + "with def: " + def.getPrintOut());
+        if(periodicTimer > 0) {
+            getTimers().startSingleTimer(TICK_KEY, new FirstTick(), Duration.ofMillis(1));
+        }
+    }
+
+    @Override
+    protected void updateEngine(TxRestEngineDefinition def){
+        // Update the definition
+        this.def = def;
+
+        // Update the timer if there is a change
+        if(def.getPeriodicity() == 0) {
+            periodicTimer = 0;
+            getTimers().cancel(TICK_KEY);
+            logger.debug("Cancelled timer for " + getSelf());
+        }
+        else if(periodicTimer != def.getPeriodicity()){
+            periodicTimer = def.getPeriodicity();
+            getTimers().cancel(TICK_KEY);
+            getTimers().startSingleTimer(TICK_KEY, new FirstTick(), Duration.ofMillis(1));
         }
     }
 
     private void firstTick(FirstTick t){
-        if (def.getPeriodicity() > 0) {
-            getTimers().startPeriodicTimer(TICK_KEY, new Tick(), Duration.ofMillis(def.getPeriodicity()));
-            logger.debug("Periodic timer for " + getSelf() + "started for id: "
-                    + def.getId() + " of " + def.getPeriodicity()
-                    + " milli-seconds");
-        }
+        getTimers().startPeriodicTimer(TICK_KEY, new Tick(), Duration.ofMillis(periodicTimer));
+        logger.debug("Periodic timer for " + getSelf() + "started for id: "
+                + def.getId() + " of " + def.getPeriodicity()
+                + " milli-seconds");
     }
 
     private void periodicService(Tick t){

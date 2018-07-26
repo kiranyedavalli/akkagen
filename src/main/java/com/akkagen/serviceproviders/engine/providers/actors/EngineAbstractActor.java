@@ -5,12 +5,10 @@ import com.akkagen.exceptions.AkkagenException;
 import com.akkagen.exceptions.AkkagenExceptionType;
 import com.akkagen.models.AbstractEngineDefinition;
 import com.akkagen.serviceproviders.engine.calculators.CalculatorRouter;
-import com.akkagen.serviceproviders.engine.providers.messages.RunMessage;
+import com.akkagen.serviceproviders.engine.providers.messages.StartMessage;
 import com.akkagen.serviceproviders.engine.providers.messages.StopMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.time.Duration;
 
 public abstract class EngineAbstractActor<T extends AbstractEngineDefinition> extends AbstractActorWithTimers {
 
@@ -22,7 +20,8 @@ public abstract class EngineAbstractActor<T extends AbstractEngineDefinition> ex
     protected EngineAbstractActor(){}
 
     // Has to be implemented by individual request Actors
-    protected abstract void runEngine(T req);
+    protected abstract void startEngine(T req);
+    protected abstract void updateEngine(T req);
 
     protected T getEngineDefinition() {
         return engineDefinition;
@@ -40,16 +39,23 @@ public abstract class EngineAbstractActor<T extends AbstractEngineDefinition> ex
         getContext().stop(getSelf());
     }
 
-    private void runService(T req) {
+    private void startService(T req) {
         setEngineDefinition(req);
-        runEngine(req);
+        startEngine(req);
         logger.debug("Engine " + getSelf() + " started for id: " + req.getId());
+    }
+
+    private void updateService(T req) {
+        setEngineDefinition(req);
+        updateEngine(req);
+        logger.debug("Engine " + getSelf() + " updated for id: " + req.getId());
     }
 
     @Override
     public Receive createReceive() {
         return receiveBuilder()
-                .match(RunMessage.class, m -> runService((T)m.getReq()))
+                .match(StartMessage.class, m -> startService((T)m.getReq()))
+                .match(StartMessage.class, m -> updateService((T)m.getReq()))
                 .match(StopMessage.class, m -> stopService(m.getId()))
                 .build();
     }
