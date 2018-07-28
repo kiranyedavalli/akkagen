@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class MonitorActor extends AkkagenAbstractActor {
 
@@ -80,8 +79,9 @@ public class MonitorActor extends AkkagenAbstractActor {
         printResources();
         currentId = UUID.randomUUID().toString();
         numActors = 0;
-        getActorSystem().actorSelection("user/*").tell(new AkkagenIdentify(currentId), getSelf());
-        getActorSystem().actorSelection("user/*/*").tell(new AkkagenIdentify(currentId), getSelf());
+        AkkagenIdentify identify = new AkkagenIdentify(UUID.randomUUID().toString());
+        getActorSystem().actorSelection("user/*").tell(identify, getSelf());
+        getActorSystem().actorSelection("user/*/*").tell(identify, getSelf());
     }
 
     private void firstMonitorTick(FirstMonitorTick t){

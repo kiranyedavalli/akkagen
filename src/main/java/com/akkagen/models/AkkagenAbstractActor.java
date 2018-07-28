@@ -1,12 +1,9 @@
 package com.akkagen.models;
 
-import akka.actor.AbstractActor;
 import akka.actor.AbstractActorWithTimers;
 import akka.actor.ActorSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.UUID;
 
 public class AkkagenAbstractActor extends AbstractActorWithTimers {
 
