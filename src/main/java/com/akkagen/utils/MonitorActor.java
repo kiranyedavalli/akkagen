@@ -18,6 +18,11 @@ public class MonitorActor extends AkkagenAbstractActor {
     private final int monitorTimer = 5000; // every 5 seconds
     private int numActors = 0;
     private String currentId;
+    private final long MEGABYTE = 1024L * 1024L;
+
+    private long bytesToMegabytes(long bytes) {
+        return bytes / MEGABYTE;
+    }
 
     public static Props props(ActorSystem system){
         return Props.create(MonitorActor.class, () -> new MonitorActor(system));
@@ -55,13 +60,24 @@ public class MonitorActor extends AkkagenAbstractActor {
     }
 
     private void printActorStatus(){
-        logger.debug("\nTotal Number of Actors: " + numActors);
+        logger.debug("\nTotal Number of Actors: " + numActors +
+                "\n");
+    }
+
+    private void printResources(){
+        Runtime runtime = Runtime.getRuntime();
+        logger.debug("\nTotal Memory: " + bytesToMegabytes(runtime.totalMemory()) + "MB" +
+                "\nFree Memory: " + bytesToMegabytes(runtime.freeMemory()) + "MB" +
+                "\nMax Memory: " + bytesToMegabytes(runtime.maxMemory()) + "MB" +
+                "\nAvailable Processors: " + runtime.availableProcessors() +
+                "\n");
     }
 
     private void monitor(MonitorTick t){
         printThreadStatus();
-        printThreadNames();
+        //printThreadNames();
         printActorStatus();
+        printResources();
         currentId = UUID.randomUUID().toString();
         numActors = 0;
         getActorSystem().actorSelection("user/*").tell(new AkkagenIdentify(currentId), getSelf());
