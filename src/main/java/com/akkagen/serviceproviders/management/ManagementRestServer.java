@@ -25,8 +25,8 @@ public class ManagementRestServer extends AbstractAkkaRestServer {
         return serviceProviders.getOrDefault(path, null);
     }
 
-    public ManagementRestServer(ActorSystem system, String host, int port){
-        super(system, host, port);
+    public ManagementRestServer(ActorSystem system, String host, int port, boolean useHttps){
+        super(system, host, port, useHttps);
     }
 
     @Override

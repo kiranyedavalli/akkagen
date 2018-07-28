@@ -1,7 +1,5 @@
 package com.akkagen.utils;
 
-import com.akkagen.exceptions.AkkagenException;
-import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flipkart.zjsonpatch.JsonDiff;
@@ -10,11 +8,16 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.stream.IntStream;
 
-public class utils {
+public class Utils {
+
+    private static final Logger logger = LoggerFactory.getLogger(Utils.class);
 
     public static <T extends Object> T getObjectFromJson(String json, Class<T> t){
         return new Gson().fromJson(json, t);

@@ -4,24 +4,20 @@ import akka.actor.AbstractActor;
 import akka.actor.ActorSystem;
 import com.akkagen.exceptions.AkkagenException;
 import com.akkagen.models.AbstractEngineDefinition;
+import com.akkagen.models.AkkagenAbstractActor;
 import com.akkagen.models.EngineInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class AbstractEngineProvider<T extends AbstractEngineDefinition> extends AbstractActor {
+public abstract class AbstractEngineProvider<T extends AbstractEngineDefinition> extends AkkagenAbstractActor {
 
     private Logger logger = LoggerFactory.getLogger(AbstractEngineProvider.class);
 
-    private ActorSystem system;
     private String path;
 
     public AbstractEngineProvider(ActorSystem system, String path){
-        this.system = system;
+        super(system);
         this.path = path;
-    }
-
-    public ActorSystem getSystem() {
-        return system;
     }
 
     public String getPath() {
@@ -52,7 +48,6 @@ public abstract class AbstractEngineProvider<T extends AbstractEngineDefinition>
     public Receive createReceive() {
         return receiveBuilder()
                 .match(EngineInput.class, this::processInput)
-                .matchAny(o -> logger.info("%s:: received unknown message",getSelf().toString()))
-                .build();
+                .build().orElse(super.createReceive());
     }
 }

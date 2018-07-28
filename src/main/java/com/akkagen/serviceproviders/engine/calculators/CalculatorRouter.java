@@ -21,7 +21,7 @@ public class CalculatorRouter extends AbstractActor {
     private List<Routee> routees = new ArrayList<Routee>();
 
     private Consumer<Class> addRouteeBehavior = c -> {
-        ActorRef r = getContext().getSystem().actorOf(Props.create(c));
+        ActorRef r = getContext().actorOf(Props.create(c));
         getContext().watch(r);
         routees.add(new ActorRefRoutee(r));
     };

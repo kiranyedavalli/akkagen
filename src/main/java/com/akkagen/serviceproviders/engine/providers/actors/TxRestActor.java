@@ -1,5 +1,6 @@
 package com.akkagen.serviceproviders.engine.providers.actors;
 
+import akka.actor.ActorSystem;
 import akka.actor.Props;
 import com.akkagen.exceptions.AkkagenException;
 import com.akkagen.exceptions.AkkagenExceptionType;
@@ -16,7 +17,7 @@ import java.security.cert.CertificateException;
 import java.time.Duration;
 import java.util.UUID;
 
-import static com.akkagen.utils.utils.getJsonObjectFromJsonString;
+import static com.akkagen.utils.Utils.getJsonObjectFromJsonString;
 
 public class TxRestActor extends EngineAbstractActor<TxRestEngineDefinition> {
 
@@ -26,14 +27,17 @@ public class TxRestActor extends EngineAbstractActor<TxRestEngineDefinition> {
     private static final class Tick {}
     private static final class FirstTick{}
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
+    private OkHttpClient okHttpClient;
 
-    public static Props props(){
-        return Props.create(TxRestActor.class, TxRestActor::new);
+    public static Props props(ActorSystem system){
+        return Props.create(TxRestActor.class, () -> new TxRestActor(system));
     }
 
-    private TxRestActor(){}
+    private TxRestActor(ActorSystem system){
+        super(system);
+    }
 
-    private OkHttpClient getHttpClient(TxRestEngineDefinition def){
+    private void createHttpClient(TxRestEngineDefinition def){
         if(def.getUrl().startsWith("https")){
             logger.debug("Its https");
             try {
@@ -63,7 +67,7 @@ public class TxRestActor extends EngineAbstractActor<TxRestEngineDefinition> {
                 // Create an ssl socket factory with our all-trusting manager
                 final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 
-                return new OkHttpClient.Builder()
+                okHttpClient = new OkHttpClient.Builder()
                         .sslSocketFactory(sslSocketFactory, (X509TrustManager)trustAllCerts[0])
                         .hostnameVerifier((hostname, session) -> true)
                         .build();
@@ -73,9 +77,9 @@ public class TxRestActor extends EngineAbstractActor<TxRestEngineDefinition> {
         }
         else if(def.getUrl().startsWith("http")){
             logger.debug("Its http");
-            return new OkHttpClient();
+            okHttpClient = new OkHttpClient();
         }
-        throw new AkkagenException("Unknown HTTP protocol specified!!!", AkkagenExceptionType.BAD_REQUEST);
+        logger.debug("Created " + (def.getUrl().startsWith("https") ? "HTTPS" : "HTTP") + " OkHttp Client: " + okHttpClient.toString());
     }
 
     private Request createRequest(TxRestEngineDefinition req){
@@ -121,7 +125,7 @@ public class TxRestActor extends EngineAbstractActor<TxRestEngineDefinition> {
     private void runEngine(TxRestEngineDefinition def){
         Request request = createRequest(def);
         logger.debug("Calling REST Out to " + request.url().toString());
-        getHttpClient(def).newCall(request).enqueue(new Callback() {
+        okHttpClient.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
                 e.printStackTrace();
@@ -144,12 +148,17 @@ public class TxRestActor extends EngineAbstractActor<TxRestEngineDefinition> {
     protected void startEngine(TxRestEngineDefinition def) {
         this.def = def;
         this.periodicTimer = def.getPeriodicity();
+        createHttpClient(def);
+
+        if(periodicTimer == 0){
+            runEngine(def);
+        }
+        else {
+            getTimers().startSingleTimer(TICK_KEY, new FirstTick(), Duration.ofMillis(1));
+        }
 
         // Start the timer if it exists
         logger.debug("In TxRestActor " + getSelf() + ":: " + def.toString() + "with def: " + def.getPrintOut());
-        if(periodicTimer > 0) {
-            getTimers().startSingleTimer(TICK_KEY, new FirstTick(), Duration.ofMillis(1));
-        }
     }
 
     @Override
@@ -183,9 +192,9 @@ public class TxRestActor extends EngineAbstractActor<TxRestEngineDefinition> {
 
     @Override
     public Receive createReceive() {
-        return super.createReceive().orElse(receiveBuilder()
+        return receiveBuilder()
                 .match(FirstTick.class, this::firstTick)
                 .match(Tick.class, this::periodicService)
-                .build());
+                .build().orElse(super.createReceive());
     }
 }

@@ -1,23 +1,28 @@
 package com.akkagen.serviceproviders.engine.providers.actors;
 
 import akka.actor.AbstractActorWithTimers;
+import akka.actor.ActorSystem;
 import com.akkagen.exceptions.AkkagenException;
 import com.akkagen.exceptions.AkkagenExceptionType;
 import com.akkagen.models.AbstractEngineDefinition;
+import com.akkagen.models.AkkagenAbstractActor;
 import com.akkagen.serviceproviders.engine.calculators.CalculatorRouter;
 import com.akkagen.serviceproviders.engine.providers.messages.StartMessage;
 import com.akkagen.serviceproviders.engine.providers.messages.StopMessage;
+import com.akkagen.serviceproviders.engine.providers.messages.UpdateMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class EngineAbstractActor<T extends AbstractEngineDefinition> extends AbstractActorWithTimers {
+public abstract class EngineAbstractActor<T extends AbstractEngineDefinition> extends AkkagenAbstractActor {
 
     private final Logger logger = LoggerFactory.getLogger(EngineAbstractActor.class);
     private T engineDefinition;
     private CalculatorRouter calculator;
 
 
-    protected EngineAbstractActor(){}
+    protected EngineAbstractActor(ActorSystem system){
+        super(system);
+    }
 
     // Has to be implemented by individual request Actors
     protected abstract void startEngine(T req);
@@ -55,8 +60,8 @@ public abstract class EngineAbstractActor<T extends AbstractEngineDefinition> ex
     public Receive createReceive() {
         return receiveBuilder()
                 .match(StartMessage.class, m -> startService((T)m.getReq()))
-                .match(StartMessage.class, m -> updateService((T)m.getReq()))
+                .match(UpdateMessage.class, m -> updateService((T)m.getReq()))
                 .match(StopMessage.class, m -> stopService(m.getId()))
-                .build();
+                .build().orElse(super.createReceive());
     }
 }

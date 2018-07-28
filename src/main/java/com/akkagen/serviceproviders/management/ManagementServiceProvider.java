@@ -5,7 +5,6 @@ import akka.http.javadsl.marshallers.jackson.Jackson;
 import akka.http.javadsl.model.HttpRequest;
 import akka.http.javadsl.model.StatusCodes;
 import akka.http.javadsl.server.Route;
-import akka.http.scaladsl.model.HttpMethods;
 import com.akkagen.Akkagen;
 import com.akkagen.exceptions.AkkagenException;
 import com.akkagen.exceptions.AkkagenExceptionType;
@@ -22,7 +21,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import static akka.http.javadsl.server.Directives.complete;
-import static com.akkagen.utils.utils.getObjectFromJson;
+import static com.akkagen.utils.Utils.getObjectFromJson;
 
 public class ManagementServiceProvider<T extends AbstractEngineDefinition> {
 

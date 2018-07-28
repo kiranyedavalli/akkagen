@@ -8,14 +8,18 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.akkagen.utils.utils.getJSONStringDiff;
-import static com.akkagen.utils.utils.getMapAsString;
+import static com.akkagen.utils.Utils.getJSONStringDiff;
+import static com.akkagen.utils.Utils.getMapAsString;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RxRestEngineDefinition extends AbstractEngineDefinition {
 
     private final Logger logger = LoggerFactory.getLogger(RxRestEngineDefinition.class);
 
+    @JsonProperty
+    private String protocol;
+    @JsonProperty
+    private int port;
     @JsonProperty
     private String uri;
     @JsonProperty
@@ -30,6 +34,14 @@ public class RxRestEngineDefinition extends AbstractEngineDefinition {
     // On Successful receipt of the request - Response will always be the requestBody
 
     public RxRestEngineDefinition() {
+    }
+
+    public String getProtocol() {
+        return protocol;
+    }
+
+    public int getPort() {
+        return port;
     }
 
     public String getUri() {
@@ -49,6 +61,16 @@ public class RxRestEngineDefinition extends AbstractEngineDefinition {
     }
 
     public String getResponseBody() { return responseBody; }
+
+    public RxRestEngineDefinition setProtocol(String protocol) {
+        this.protocol = protocol;
+        return this;
+    }
+
+    public RxRestEngineDefinition setPort(int port) {
+        this.port = port;
+        return this;
+    }
 
     public RxRestEngineDefinition setUri(String uri) {
         this.uri = uri;

@@ -33,9 +33,10 @@ public class ServiceProviderFactory {
      */
     private ManagementRestServer mgmtRestServer = null;
     private final int mgmtPort = 9010;
+    private final boolean mgmtHttps = false;
 
     public void initializeMgmtRestServer(){
-        mgmtRestServer = new ManagementRestServer(system, host, mgmtPort);
+        mgmtRestServer = new ManagementRestServer(system, host, mgmtPort, mgmtHttps);
         logger.debug("Management Rest Server Started");
     }
 
@@ -53,8 +54,8 @@ public class ServiceProviderFactory {
     private ConcurrentHashMap<String, ActorRef> engineProviderMap = new ConcurrentHashMap<>();
 
     public void initializeEngineProviders(){
-        addEngineProvider(system.actorOf(TxRestEngineProvider.props(system, PathConstants.__TX_REST)), PathConstants.__TX_REST);
-        addEngineProvider(system.actorOf(RxRestEngineProvider.props(system, PathConstants.__RX_REST)), PathConstants.__RX_REST);
+        addEngineProvider(system.actorOf(TxRestEngineProvider.props(system, PathConstants.__TX_REST), "tx-rest-engine-provider"), PathConstants.__TX_REST);
+        addEngineProvider(system.actorOf(RxRestEngineProvider.props(system, PathConstants.__RX_REST), "rx-rest-engine-provider"), PathConstants.__RX_REST);
         // Add new engine providers here
     }
 

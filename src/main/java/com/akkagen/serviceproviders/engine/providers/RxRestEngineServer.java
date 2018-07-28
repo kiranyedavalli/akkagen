@@ -2,9 +2,8 @@ package com.akkagen.serviceproviders.engine.providers;
 
 
 import akka.actor.ActorSystem;
-import akka.http.javadsl.model.HttpMethod;
-import akka.http.javadsl.model.HttpRequest;
-import akka.http.javadsl.model.StatusCodes;
+import akka.dispatch.MessageDispatcher;
+import akka.http.javadsl.model.*;
 import akka.http.javadsl.server.Route;
 import com.akkagen.exceptions.AkkagenException;
 import com.akkagen.exceptions.AkkagenExceptionType;
@@ -16,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class RxRestEngineServer extends AbstractAkkaRestServer {
@@ -56,8 +56,8 @@ public class RxRestEngineServer extends AbstractAkkaRestServer {
         return rex;
     }
 
-    public RxRestEngineServer(ActorSystem system, String host, int port){
-        super(system, host, port);
+    public RxRestEngineServer(ActorSystem system, String host, int port, boolean useHttps){
+        super(system, host, port, useHttps);
     }
 
     @Override
@@ -79,6 +79,7 @@ public class RxRestEngineServer extends AbstractAkkaRestServer {
         RxRestEngineDefinition value = getRxRestEngine(uri);
         if(value != null && value.equals(input)){
             rxRestEnginesCount.compute(uri, (u,l) -> l == null ? 1 : l+1);
+            logger.debug("Count for " + uri + " : " + rxRestEnginesCount.get(uri));
             logger.debug("Found a match: " + value.getPrintOut());
             if(ActionType.getActionType(method).equals(ActionType.POST) ||
                     ActionType.getActionType(method).equals(ActionType.PUT) ||
@@ -90,5 +91,4 @@ public class RxRestEngineServer extends AbstractAkkaRestServer {
         logger.debug("DID NOT FIND A MATCH FOR: "  + value.getPrintOut());
         return complete(StatusCodes.NOT_FOUND,"Input not supported");
     }
-
 }
