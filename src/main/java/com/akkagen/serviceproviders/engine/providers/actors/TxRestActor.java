@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.security.cert.CertificateException;
 import java.time.Duration;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static com.akkagen.utils.Utils.getJsonObjectFromJsonString;
 
@@ -28,6 +29,7 @@ public class TxRestActor extends EngineAbstractActor<TxRestEngineDefinition> {
     private static final class FirstTick{}
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
     private OkHttpClient okHttpClient;
+    private int timeout = 5; // Minutes
 
     public static Props props(ActorSystem system){
         return Props.create(TxRestActor.class, () -> new TxRestActor(system));
@@ -35,6 +37,13 @@ public class TxRestActor extends EngineAbstractActor<TxRestEngineDefinition> {
 
     private TxRestActor(ActorSystem system){
         super(system);
+    }
+
+    private OkHttpClient.Builder getClientBuilder(){
+        return new OkHttpClient.Builder()
+                .readTimeout(timeout, TimeUnit.MINUTES)
+                .writeTimeout(timeout, TimeUnit.MINUTES)
+                .connectTimeout(timeout, TimeUnit.MINUTES);
     }
 
     private void createHttpClient(TxRestEngineDefinition def){
@@ -67,7 +76,7 @@ public class TxRestActor extends EngineAbstractActor<TxRestEngineDefinition> {
                 // Create an ssl socket factory with our all-trusting manager
                 final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 
-                okHttpClient = new OkHttpClient.Builder()
+                okHttpClient = getClientBuilder()
                         .sslSocketFactory(sslSocketFactory, (X509TrustManager)trustAllCerts[0])
                         .hostnameVerifier((hostname, session) -> true)
                         .build();
@@ -77,7 +86,7 @@ public class TxRestActor extends EngineAbstractActor<TxRestEngineDefinition> {
         }
         else if(def.getUrl().startsWith("http")){
             logger.debug("Its http");
-            okHttpClient = new OkHttpClient();
+            okHttpClient = getClientBuilder().build();
         }
         logger.debug("Created " + (def.getUrl().startsWith("https") ? "HTTPS" : "HTTP") + " OkHttp Client: " + okHttpClient.toString());
     }
@@ -137,6 +146,7 @@ public class TxRestActor extends EngineAbstractActor<TxRestEngineDefinition> {
                     throw new IOException("Unexpected code " + response);
                 } else {
                     logger.debug("Response code: " + response.code());
+                    response.body().close();
                 }
             }
         });

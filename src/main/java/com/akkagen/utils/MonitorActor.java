@@ -14,7 +14,7 @@ public class MonitorActor extends AkkagenAbstractActor {
     private static Object MONITOR_KEY = "MonitorKey";
     private static final class MonitorTick {}
     private static final class FirstMonitorTick{}
-    private final int monitorTimer = 5000; // every 5 seconds
+    private final int monitorTimer = 60; // seconds
     private int numActors = 0;
     private String currentId;
     private final long MEGABYTE = 1024L * 1024L;
@@ -85,8 +85,8 @@ public class MonitorActor extends AkkagenAbstractActor {
     }
 
     private void firstMonitorTick(FirstMonitorTick t){
-        getTimers().startPeriodicTimer(MONITOR_KEY, new MonitorTick(), Duration.ofMillis(monitorTimer));
-        logger.debug("Periodic timer for " + getSelf() + "started for " + monitorTimer + " milli-seconds");
+        getTimers().startPeriodicTimer(MONITOR_KEY, new MonitorTick(), Duration.ofSeconds(monitorTimer));
+        logger.debug("Periodic timer for " + getSelf() + "started for " + monitorTimer + " seconds");
     }
 
     private void identifyAck(AkkagenIdentifyAck ack, ActorRef sender){
