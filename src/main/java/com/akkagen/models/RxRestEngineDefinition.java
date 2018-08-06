@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import static com.akkagen.utils.Utils.getJSONStringDiff;
 import static com.akkagen.utils.Utils.getMapAsString;
@@ -130,4 +131,8 @@ public class RxRestEngineDefinition extends AbstractEngineDefinition {
                 + "\nresponseBody: " + responseBody).toString();
 
     }
+
+    // TODO: implement real validators
+    public static Predicate<RxRestEngineDefinition> inputDataValidator = i -> true;
+    public static Predicate<ActionType> methodValidator = m -> true;
 }

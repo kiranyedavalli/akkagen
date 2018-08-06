@@ -19,7 +19,7 @@ public class Utils {
 
     private static final Logger logger = LoggerFactory.getLogger(Utils.class);
 
-    public static <T extends Object> T getObjectFromJson(String json, Class<T> t){
+    public static <T> T getObjectFromJson(String json, Class<T> t){
         return new Gson().fromJson(json, t);
     }
 
@@ -28,7 +28,7 @@ public class Utils {
             return StringUtils.EMPTY;
         }
         StringBuilder str = new StringBuilder();
-        map.forEach((k,v) -> str.append(k + ":" + v));
+        map.forEach((k,v) -> str.append(k).append(":").append(v));
         return str.toString();
     }
 

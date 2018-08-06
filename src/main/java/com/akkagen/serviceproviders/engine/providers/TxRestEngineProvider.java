@@ -95,9 +95,11 @@ public class TxRestEngineProvider extends AbstractEngineProvider<TxRestEngineDef
         }else if((instances != 0) && instances > req.getInstances()){
             logger.debug("Removing " + diff + " number of actors");
             ArrayList<ActorRef> killActorList = new ArrayList<>();
+            // Start removing from the end of the list for efficiency
+            ArrayList<ActorRef> list = getActorList(req.getId());
             IntStream.range(0, diff).forEach(i -> {
-                killActorList.add(getActorList(req.getId()).get(i));
-                getActorList(req.getId()).remove(i);
+                killActorList.add(list.get(list.size()-1));
+                list.remove(list.size()-1);
             });
             runActors(req, req.getId(), killActorList, stopBehavior);
         }

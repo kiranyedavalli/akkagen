@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TxRestEngineDefinition extends AbstractEngineDefinition {
@@ -102,4 +103,8 @@ public class TxRestEngineDefinition extends AbstractEngineDefinition {
                         "\nperiodicity: %d\nexpectedResponse: %s",
                 super.getPrintOut(), url, body, method, heads, queries, instances, periodicity, expectedResponse);
     }
+
+    // TODO: implement real validators
+    public static Predicate<TxRestEngineDefinition> inputDataValidator = i -> true;
+    public static Predicate<ActionType> methodValidator = m -> true;
 }

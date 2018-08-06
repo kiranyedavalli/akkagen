@@ -45,4 +45,4 @@ public abstract class AbstractEngineDefinition {
         return String.format("id: %s\nname: %s\ndescription: %s\n",
                 id, name, description);
     }
-}
+ }

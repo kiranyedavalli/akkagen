@@ -2,6 +2,8 @@ package com.akkagen.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.function.Predicate;
+
 public class RxRestEngineStatsDefinition extends AbstractEngineDefinition {
 
     @JsonProperty
@@ -28,4 +30,8 @@ public class RxRestEngineStatsDefinition extends AbstractEngineDefinition {
         this.count = count;
         return this;
     }
+
+    // TODO: implement real validators
+    public static Predicate<RxRestEngineStatsDefinition> inputDataValidator = i -> true;
+    public static Predicate<ActionType> methodValidator = m -> m.equals(ActionType.GET);
 }
