@@ -7,3 +7,9 @@ Akkagen is a traffic generation tool built using the Akka framework. The tool ca
 ### REST Servers
 - Simulate mulitple REST servers that can take in requests and validate the pre-specified request bodies and repsond with pre-specified custom repsonses.
 - Generate REST client call throughput statistics
+
+## TODO:
+* Metrics calculations between tx-rest and rx-rest
+* Unit tests
+* Akkagen CLI 
+* Authentication support for tx-rest
