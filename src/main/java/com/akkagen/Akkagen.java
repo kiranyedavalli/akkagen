@@ -8,9 +8,16 @@ package com.akkagen;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import com.akkagen.exceptions.AkkagenException;
 import com.akkagen.models.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 
 
 /*
@@ -28,10 +35,35 @@ public class Akkagen {
 
     }
 
+    public Properties getProperties(){
+        Properties props = new Properties();
+        InputStream input = null;
+        try{
+            input = this.getClass().getClassLoader().getResourceAsStream("akkagen.properties");
+            props.load(input);
+        }
+        catch(IOException e){
+            logger.error("Unable to read akkagen.properties file");
+            throw new AkkagenException("Unable to read akkagen.properties file");
+        }
+        finally{
+            if(input!=null){
+                try{
+                    input.close();
+                }
+                catch(IOException e){
+                    logger.error("Unable to close akkagen.properties file");
+                    throw new AkkagenException("Unable to close akkagen.properties file");
+                }
+            }
+        }
+        return props;
+    }
+
     public void initialize(){
         this.system = ActorSystem.create("akkagen");
-        this.spFactory = new ServiceProviderFactory(system);
-        this.monitor = system.actorOf(Monitor.props(system), "monitor-actor");
+        this.spFactory = new ServiceProviderFactory(system, getProperties());
+        this.monitor = system.actorOf(Monitor.props(system, getProperties()), "monitor-actor");
     }
 
     public static Akkagen getInstance(){

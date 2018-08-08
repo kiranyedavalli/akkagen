@@ -21,6 +21,9 @@ import com.akkagen.serviceproviders.management.ManagementServiceProviderStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
@@ -28,21 +31,31 @@ public class ServiceProviderFactory {
 
     private final Logger logger = LoggerFactory.getLogger(ServiceProviderFactory.class);
     private ActorSystem system;
-    private final String host = "localhost";
 
-    public ServiceProviderFactory(ActorSystem system){
+    private String mgmtHost;
+    private int mgmtPort;
+    private boolean mgmtHttps;
+    private String engineHost;
+
+
+    public ServiceProviderFactory(ActorSystem system, Properties properties){
         this.system = system;
+        mgmtHost = properties.getProperty("mgmtHost");
+        mgmtPort = Integer.parseInt(properties.getProperty("mgmtPort"));
+        mgmtHttps = Boolean.valueOf(properties.getProperty("mgmtHttps"));
+        engineHost = properties.getProperty("engineHost");
+        logger.debug("akkagen.properties:mgmtHost: {}, mgmtPort: {}, mgmtHttps: {}, engineHost: {}",
+               mgmtHost, mgmtPort, mgmtHttps, engineHost);
     }
 
     /*
      *    MANAGEMENT
      */
     private ManagementRestServer mgmtRestServer = null;
-    private final int mgmtPort = 9010;
-    private final boolean mgmtHttps = false;
+
 
     public void initializeMgmtRestServer(){
-        mgmtRestServer = new ManagementRestServer(system, host, mgmtPort, mgmtHttps);
+        mgmtRestServer = new ManagementRestServer(system, mgmtHost, mgmtPort, mgmtHttps);
         logger.debug("Management Rest Server Started");
     }
 
@@ -60,8 +73,10 @@ public class ServiceProviderFactory {
     private ConcurrentHashMap<String, ActorRef> engineProviderMap = new ConcurrentHashMap<>();
 
     public void initializeEngineProviders(){
-        addEngineProvider(system.actorOf(TxRestEngineProvider.props(system, PathConstants.__TX_REST), "tx-rest-engine-provider"), PathConstants.__TX_REST);
-        addEngineProvider(system.actorOf(RxRestEngineProvider.props(system, PathConstants.__RX_REST), "rx-rest-engine-provider"), PathConstants.__RX_REST);
+        addEngineProvider(system.actorOf(TxRestEngineProvider.props(system, PathConstants.__TX_REST),
+                "tx-rest-engine-provider"), PathConstants.__TX_REST);
+        addEngineProvider(system.actorOf(RxRestEngineProvider.props(system, PathConstants.__RX_REST, engineHost),
+                "rx-rest-engine-provider"), PathConstants.__RX_REST);
         // Add new engine providers here
     }
 

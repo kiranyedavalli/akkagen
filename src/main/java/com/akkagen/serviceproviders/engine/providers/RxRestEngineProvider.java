@@ -18,18 +18,20 @@ import com.akkagen.models.RxRestEngineDefinition;
 public class RxRestEngineProvider extends AbstractEngineProvider<RxRestEngineDefinition> {
 
     private RxRestEngineServer rxRestEngineServer = null;
+    private String host;
 
-    public static Props props(ActorSystem system, String path){
-        return Props.create(RxRestEngineProvider.class, () -> new RxRestEngineProvider(system, path));
+    public static Props props(ActorSystem system, String path, String host){
+        return Props.create(RxRestEngineProvider.class, () -> new RxRestEngineProvider(system, path, host));
     }
 
-    private RxRestEngineProvider(ActorSystem system, String path){
+    private RxRestEngineProvider(ActorSystem system, String path, String host){
         super(system, path);
+        this.host = host;
     }
 
     @Override
     public void createEngine(RxRestEngineDefinition def) {
-        rxRestEngineServer = new RxRestEngineServer(getActorSystem(), "localhost", def.getPort(),
+        rxRestEngineServer = new RxRestEngineServer(getActorSystem(), host, def.getPort(),
                 (def.getProtocol().equals(ProtocolConstants._HTTPS)));
         rxRestEngineServer.addRxRestEngine(def);
     }

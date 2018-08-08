@@ -12,7 +12,6 @@ import com.akkagen.models.AkkagenAbstractActor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
@@ -30,6 +29,7 @@ public class Monitor extends AkkagenAbstractActor {
     private int monitorTimer;
     private boolean showThreadDetails;
     private boolean showThreadNames;
+    private boolean showResources;
 
     private int numActors = 0;
     private String currentId;
@@ -39,43 +39,18 @@ public class Monitor extends AkkagenAbstractActor {
         return bytes / MEGABYTE;
     }
 
-    public static Props props(ActorSystem system){
-        return Props.create(Monitor.class, () -> new Monitor(system));
+    public static Props props(ActorSystem system, Properties properties){
+        return Props.create(Monitor.class, () -> new Monitor(system, properties));
     }
 
-    private void initialize(){
-        Properties properties = new Properties();
-        InputStream input = null;
-        try {
-            input = new FileInputStream("/monitor.properties");
-            properties.load(input);
-            monitorTimer = Integer.parseInt(properties.getProperty("monitorTimer"));
-            showThreadDetails = Boolean.valueOf(properties.getProperty("showThreadDetails"));
-            showThreadNames = Boolean.valueOf(properties.getProperty("showThreadNames"));
-            logger.debug("monitor.properties:monitorTimer: {}, showThreadDetails: {}, showThreadNames: {}",
-                    monitorTimer, showThreadDetails, showThreadNames);
-        }
-        catch(IOException e){
-            logger.error("Error in reading monitor.properties file");
-            throw new AkkagenException("Error in reading monitor.properties file");
-        }
-        finally {
-            if(input != null){
-                try{
-                    input.close();
-                }
-                catch(IOException e){
-                    logger.error("Error in closing monitor.properties file");
-                    throw new AkkagenException("Error in closing monitor.properties file");
-                }
-            }
-        }
-
-    }
-
-    private Monitor(ActorSystem system){
+    private Monitor(ActorSystem system, Properties properties){
         super(system);
-        initialize();
+        monitorTimer = Integer.parseInt(properties.getProperty("monitorTimer"));
+        showThreadDetails = Boolean.valueOf(properties.getProperty("showThreadDetails"));
+        showThreadNames = Boolean.valueOf(properties.getProperty("showThreadNames"));
+        showResources = Boolean.valueOf(properties.getProperty("showResources"));
+        logger.debug("akkagen.properties:monitorTimer: {}, showThreadDetails: {}, showThreadNames: {}, showResources: {}",
+                monitorTimer, showThreadDetails, showThreadNames, showResources);
         getTimers().startSingleTimer(MONITOR_KEY, new FirstMonitorTick(), Duration.ofMillis(1));
     }
 
@@ -108,11 +83,11 @@ public class Monitor extends AkkagenAbstractActor {
     }
 
     private void printActorStatus(){
-        logger.debug("\nTotal Number of Actors: " + numActors +
-                "\n");
+        logger.debug("Total Number of Actors: " + numActors);
     }
 
     private void printResources(){
+        if(!showResources) return;
         Runtime runtime = Runtime.getRuntime();
         logger.debug("\nTotal Memory: " + bytesToMegabytes(runtime.totalMemory()) + "MB" +
                 "\nFree Memory: " + bytesToMegabytes(runtime.freeMemory()) + "MB" +
@@ -128,7 +103,7 @@ public class Monitor extends AkkagenAbstractActor {
         printResources();
         currentId = UUID.randomUUID().toString();
         numActors = 0;
-        AkkagenIdentify identify = new AkkagenIdentify(UUID.randomUUID().toString());
+        AkkagenIdentify identify = new AkkagenIdentify(currentId);
         getActorSystem().actorSelection("user/*").tell(identify, getSelf());
         getActorSystem().actorSelection("user/*/*").tell(identify, getSelf());
     }
