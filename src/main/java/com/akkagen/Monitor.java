@@ -1,44 +1,86 @@
 /*
- * Developed  by Kiran Yedavalli on 8/7/18 12:27 PM
- * Last Modified 8/6/18 2:33 PM
+ * Developed  by Kiran Yedavalli on 8/8/18 10:50 AM
+ * Last Modified 8/7/18 12:27 PM
  * Copyright (c) 2018. All rights reserved.
  */
 
-package com.akkagen.utils;
+package com.akkagen;
 
 import akka.actor.*;
+import com.akkagen.exceptions.AkkagenException;
 import com.akkagen.models.AkkagenAbstractActor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.Duration;
+import java.util.Properties;
 import java.util.UUID;
 
-public class MonitorActor extends AkkagenAbstractActor {
+public class Monitor extends AkkagenAbstractActor {
 
-    private final Logger logger = LoggerFactory.getLogger(MonitorActor.class);
+    private final Logger logger = LoggerFactory.getLogger(Monitor.class);
+
     private static Object MONITOR_KEY = "MonitorKey";
     private static final class MonitorTick {}
     private static final class FirstMonitorTick{}
-    private final int monitorTimer = 60; // seconds
+
+    private int monitorTimer;
+    private boolean showThreadDetails;
+    private boolean showThreadNames;
+
     private int numActors = 0;
     private String currentId;
-    private final long MEGABYTE = 1024L * 1024L;
 
     private long bytesToMegabytes(long bytes) {
+        final long MEGABYTE = 1024L * 1024L;
         return bytes / MEGABYTE;
     }
 
     public static Props props(ActorSystem system){
-        return Props.create(MonitorActor.class, () -> new MonitorActor(system));
+        return Props.create(Monitor.class, () -> new Monitor(system));
     }
 
-    private MonitorActor(ActorSystem system){
+    private void initialize(){
+        Properties properties = new Properties();
+        InputStream input = null;
+        try {
+            input = new FileInputStream("/monitor.properties");
+            properties.load(input);
+            monitorTimer = Integer.parseInt(properties.getProperty("monitorTimer"));
+            showThreadDetails = Boolean.valueOf(properties.getProperty("showThreadDetails"));
+            showThreadNames = Boolean.valueOf(properties.getProperty("showThreadNames"));
+            logger.debug("monitor.properties:monitorTimer: {}, showThreadDetails: {}, showThreadNames: {}",
+                    monitorTimer, showThreadDetails, showThreadNames);
+        }
+        catch(IOException e){
+            logger.error("Error in reading monitor.properties file");
+            throw new AkkagenException("Error in reading monitor.properties file");
+        }
+        finally {
+            if(input != null){
+                try{
+                    input.close();
+                }
+                catch(IOException e){
+                    logger.error("Error in closing monitor.properties file");
+                    throw new AkkagenException("Error in closing monitor.properties file");
+                }
+            }
+        }
+
+    }
+
+    private Monitor(ActorSystem system){
         super(system);
+        initialize();
         getTimers().startSingleTimer(MONITOR_KEY, new FirstMonitorTick(), Duration.ofMillis(1));
     }
 
-    private void printThreadStatus(){
+    private void printThreadDetails(){
+        if(!showThreadDetails) return;
         logger.debug("\nTotal Threads: " + Thread.getAllStackTraces().keySet().size() +
                 "\nRunnable Threads: " + Thread.getAllStackTraces().keySet().stream().filter(t -> t.getState() == Thread.State.RUNNABLE).count() +
                 "\nBlocked Threads: " + Thread.getAllStackTraces().keySet().stream().filter(t -> t.getState() == Thread.State.BLOCKED).count() +
@@ -50,6 +92,7 @@ public class MonitorActor extends AkkagenAbstractActor {
     }
 
     private void printThreadNames(){
+        if(!showThreadNames) return;
         logger.debug("\nRunnable Threads Names: ");
         Thread.getAllStackTraces().keySet().stream().filter(t -> t.getState() == Thread.State.RUNNABLE).forEach(t -> logger.debug(t.getName()));
         logger.debug("\nBlocked Threads: ");
@@ -79,8 +122,8 @@ public class MonitorActor extends AkkagenAbstractActor {
     }
 
     private void monitor(MonitorTick t){
-        printThreadStatus();
-        //printThreadNames();
+        printThreadDetails();
+        printThreadNames();
         printActorStatus();
         printResources();
         currentId = UUID.randomUUID().toString();

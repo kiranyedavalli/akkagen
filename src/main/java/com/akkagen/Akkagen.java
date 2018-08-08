@@ -9,11 +9,8 @@ package com.akkagen;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import com.akkagen.models.*;
-import com.akkagen.utils.MonitorActor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.function.Predicate;
 
 
 /*
@@ -34,7 +31,7 @@ public class Akkagen {
     public void initialize(){
         this.system = ActorSystem.create("akkagen");
         this.spFactory = new ServiceProviderFactory(system);
-        this.monitor = system.actorOf(MonitorActor.props(system), "monitor-actor");
+        this.monitor = system.actorOf(Monitor.props(system), "monitor-actor");
     }
 
     public static Akkagen getInstance(){
