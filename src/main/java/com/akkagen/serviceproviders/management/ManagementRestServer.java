@@ -10,14 +10,14 @@ import akka.actor.ActorSystem;
 import akka.http.javadsl.model.HttpRequest;
 import akka.http.javadsl.model.StatusCodes;
 import akka.http.javadsl.server.Route;
-import com.akkagen.models.AbstractAkkaRestServer;
+import com.akkagen.models.AbstractAkkagenRestServer;
 import com.akkagen.models.ActionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-public class ManagementRestServer extends AbstractAkkaRestServer {
+public class ManagementRestServer extends AbstractAkkagenRestServer {
 
     private final Logger logger = LoggerFactory.getLogger(ManagementRestServer.class);
     private ConcurrentHashMap<String, ManagementServiceProvider> serviceProviders = new ConcurrentHashMap<>();

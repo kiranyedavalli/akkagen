@@ -8,9 +8,7 @@ package com.akkagen.models;
 
 import akka.NotUsed;
 import akka.actor.ActorSystem;
-import akka.dispatch.MessageDispatcher;
 import akka.http.javadsl.*;
-import akka.http.javadsl.marshallers.jackson.Jackson;
 import akka.http.javadsl.model.*;
 import akka.http.javadsl.server.AllDirectives;
 import akka.http.javadsl.server.Route;
@@ -30,19 +28,17 @@ import java.io.InputStream;
 import java.security.*;
 import java.security.cert.CertificateException;
 
-import java.io.IOException;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 
-public abstract class AbstractAkkaRestServer extends AllDirectives {
+public abstract class AbstractAkkagenRestServer extends AllDirectives {
 
-    private final Logger logger = LoggerFactory.getLogger(AbstractAkkaRestServer.class);
+    private final Logger logger = LoggerFactory.getLogger(AbstractAkkagenRestServer.class);
     private ActorSystem system;
     private Http http;
     private ActorMaterializer materializer;
 
-    public AbstractAkkaRestServer(ActorSystem system, String host, int port, boolean useHttps){
+    public AbstractAkkagenRestServer(ActorSystem system, String host, int port, boolean useHttps){
         this.system = system;
         this.http = Http.get(system);
         this.materializer = ActorMaterializer.create(system);
@@ -66,7 +62,7 @@ public abstract class AbstractAkkaRestServer extends AllDirectives {
             final char[] password = new char[]{'a', 'b', 'c', 'd', 'e', 'f'};
 
             final KeyStore ks = KeyStore.getInstance("PKCS12");
-            final InputStream keystore = AbstractAkkaRestServer.class.getClassLoader().getResourceAsStream("httpsKeys/keys/server.p12");
+            final InputStream keystore = AbstractAkkagenRestServer.class.getClassLoader().getResourceAsStream("httpsKeys/keys/server.p12");
             if (keystore == null) {
                 throw new RuntimeException("Keystore required!");
             }

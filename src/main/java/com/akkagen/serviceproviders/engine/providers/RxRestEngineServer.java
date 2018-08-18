@@ -8,12 +8,11 @@ package com.akkagen.serviceproviders.engine.providers;
 
 
 import akka.actor.ActorSystem;
-import akka.dispatch.MessageDispatcher;
 import akka.http.javadsl.model.*;
 import akka.http.javadsl.server.Route;
 import com.akkagen.exceptions.AkkagenException;
 import com.akkagen.exceptions.AkkagenExceptionType;
-import com.akkagen.models.AbstractAkkaRestServer;
+import com.akkagen.models.AbstractAkkagenRestServer;
 import com.akkagen.models.ActionType;
 import com.akkagen.models.RxRestEngineDefinition;
 import org.slf4j.Logger;
@@ -21,10 +20,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class RxRestEngineServer extends AbstractAkkaRestServer {
+public class RxRestEngineServer extends AbstractAkkagenRestServer {
 
     private final Logger logger = LoggerFactory.getLogger(RxRestEngineServer.class);
     private ConcurrentHashMap<String, RxRestEngineDefinition> rxRestEngines = new ConcurrentHashMap<>();
