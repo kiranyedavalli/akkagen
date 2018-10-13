@@ -6,5 +6,11 @@
 
 package com.akkagen.serviceproviders.engine.calculators;
 
-public class AbstractCalculator {
+import akka.actor.ActorSystem;
+import com.akkagen.models.AkkagenAbstractActor;
+
+public class AbstractCalculator extends AkkagenAbstractActor {
+    public AbstractCalculator(ActorSystem system) {
+        super(system);
+    }
 }
